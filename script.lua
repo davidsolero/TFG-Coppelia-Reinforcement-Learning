@@ -3,8 +3,8 @@ function sysCall_init()
     objectToFollowPath = sim.getObjectHandle('/PioneerP3DX')
     robot = sim.getObjectHandle('/PioneerP3DX')
 
-    velocity = 0.6 -- m/s
-    angularVelocity = 0.8 -- rad/s
+    velocity = 0.5 -- m/s (máximo ~0.5 m/s en terreno plano) --velocidades realistas supongo??
+    angularVelocity = 1.57 -- rad/s (~90 grados/s)
     sim.setStepping(true)
 
     -- Time tracking
@@ -609,7 +609,7 @@ end
 -- MAIN LOOP
 -- =================================
 function sysCall_thread()
-    local actions = {actionGoToRoom, actionStop}
+    local actions = {actionGoToRoom}--, actionStop}
     
     while not sim.getSimulationStopping() do
         -- Check if operator needed
