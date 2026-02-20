@@ -146,6 +146,9 @@ function logMessage(level, category, message)
     end
 end
 
+-- Cuenta el número de elementos en una tabla con claves no numéricas.
+-- Lua no tiene función nativa para esto (# solo funciona con arrays numéricos).
+-- Ejemplo: tableLength({R=1, Hab1=2, C=3}) devuelve 3
 function tableLength(t)
     local count = 0
     for _ in pairs(t) do count = count + 1 end
@@ -165,6 +168,16 @@ function publishState()
 end
 
 function setStatus(status)
+    -- Estados válidos:
+    --   "idle"            -> Robot esperando comandos
+    --   "ready"           -> Tras reset, listo para empezar
+    --   "moving"          -> Ejecutando goTo
+    --   "arrived"         -> Llegó al destino
+    --   "stopped"         -> Ejecutando actionStop
+    --   "depleted"        -> Batería agotada
+    --   "charging"        -> Cargando (durante callOperator)
+    --   "operator_called" -> Momento de teletransporte a C
+    --   "error"           -> Comando inválido o path no encontrado
     sim.setStringSignal('robot_status', status)
 end
 
@@ -776,7 +789,7 @@ function parseAndExecuteCommand(cmd)
     clearCommand()
     
     -- Parse command
-    local action, param = cmd:match('([^:]+):?(.*)')
+    local action, param = cmd:match('([^:]+):?(.*)')  --action:param
     
     if action == 'goTo' and param ~= '' then
         return goTo(param)
