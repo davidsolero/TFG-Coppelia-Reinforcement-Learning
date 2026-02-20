@@ -1,41 +1,214 @@
+--[[
+================================================================================
+ROBOT NAVIGATION SCRIPT - DOCUMENTACIÓN
+================================================================================
+
+DESCRIPCIÓN GENERAL
+-------------------
+Este script implementa un sistema de navegación autónoma de alto nivel para un
+robot Pioneer P3DX en CoppeliaSim. El robot puede desplazarse entre ubicaciones
+predefinidas (nodos) siguiendo rutas (paths) mientras gestiona su batería de
+forma realista.
+
+El objetivo principal es servir como base para implementar aprendizaje por
+refuerzo (RL) para la toma de decisiones de alto nivel.
+
+ARQUITECTURA DEL SISTEMA
+------------------------
+El sistema se divide en capas:
+
+    +------------------------------------------+
+    |        CAPA DE ALTO NIVEL (RL)           |
+    |   Acciones: goTo, stop, callOperator     |
+    +------------------------------------------+
+                      |
+    +------------------------------------------+
+    |      CAPA DE PLANIFICACIÓN               |
+    |   Dijkstra, findShortestPath             |
+    +------------------------------------------+
+                      |
+    +------------------------------------------+
+    |      CAPA DE MOVIMIENTO                  |
+    |   followPath, rotateTo, moveToPosition   |
+    +------------------------------------------+
+                      |
+    +------------------------------------------+
+    |      CAPA DE SIMULACIÓN                  |
+    |   CoppeliaSim API, sim.step()            |
+    +------------------------------------------+
+
+NODOS DEL ENTORNO
+-----------------
+- R: Punto de inicio del robot (no se vuelve a él durante la operación)
+- Hab1, Hab2, Hab3: Habitaciones/ubicaciones de trabajo
+- C: Estación de carga
+
+CONECTIVIDAD
+------------
+Todas las habitaciones (Hab1, Hab2, Hab3) y la estación de carga (C) están
+conectadas entre sí mediante paths bidireccionales. El robot puede ir
+directamente de cualquier nodo a cualquier otro.
+
+El algoritmo de Dijkstra calcula la ruta más corta basándose en la longitud
+real de los paths, no en distancia euclidiana.
+
+MODELO DE BATERÍA
+-----------------
+El sistema implementa un modelo de batería bifásico realista:
+
+DESCARGA (cuando el robot NO está en zona de carga):
+    
+    Batería
+    100% |============== (Fase 1: Meseta) ==============|
+         |                                              |\
+         |                                              | \
+         |                                              |  \ (Fase 2: Caída)
+      0% |                                              |   \___________
+         +----------------------------------------------+--------------> Tiempo
+         0                                          t1              t1+t2
+    
+    - Fase 1 (discharge_plateau): Batería al 100% durante dischargePhase1Duration
+    - Fase 2 (discharge_fall): Caída lineal de 100% a 0% en dischargePhase2Duration
+    - Fase 3 (discharge_depleted): Batería a 0%, requiere operario
+
+CARGA (cuando el robot está en zona de carga):
+    
+    Batería
+    100% |                    ========================== (Fase 2: Meseta)
+         |                   /
+         |                  / (Fase 1: Subida)
+         |                 /
+      0% |________________/
+         +------------------------------------------------> Tiempo
+    
+    - Fase 1 (charge_rise): Subida lineal desde nivel actual hasta 100%
+    - Fase 2 (charge_plateau): Mantiene 100% mientras siga cargando
+
+    Nota: El tiempo de carga es proporcional a la batería que falta.
+    Si empieza al 50%, tarda la mitad de chargePhase1Duration.
+
+ACCIONES DE ALTO NIVEL
+----------------------
+1. actionGoToRoom(): Selecciona habitación aleatoria y navega hacia ella
+2. actionStop(): Detiene el robot durante 1-5 segundos (consume batería)
+3. callOperator(): Teletransporta a C y recarga (se llama automáticamente al agotar batería)
+
+PARÁMETROS CONFIGURABLES
+------------------------
+Ver sección CONFIGURATION PARAMETERS más abajo.
+
+INTEGRACIÓN CON RL (FUTURO)
+---------------------------
+Este script está diseñado para integrarse con Python vía ZeroMQ Remote API.
+El agente RL podrá:
+- Observar: currentNode, battery, batteryPhase, isCharging
+- Actuar: goTo(nodo), stop()
+- Recibir recompensa basada en: tiempo operativo, eficiencia de desplazamiento
+
+================================================================================
+--]]
+
+--[[
+================================================================================
+CONFIGURATION PARAMETERS - AJUSTA ESTOS VALORES
+================================================================================
+--]]
+
+-- MOVIMIENTO
+local CONFIG = {
+    -- Velocidad lineal del robot (m/s)
+    -- Pioneer P3DX real: máximo ~1.2 m/s, recomendado 0.3-0.5 para interiores
+    -- Valores: 0.1 (muy lento) | 0.3 (cauteloso) | 0.5 (normal) | 0.8 (rápido)
+    VELOCITY = 0.5,
+    
+    -- Velocidad angular (rad/s)
+    -- Pioneer P3DX real: máximo ~5.24 rad/s (~300°/s)
+    -- Valores: 0.5 (suave) | 1.57 (90°/s normal) | 3.14 (180°/s rápido)
+    ANGULAR_VELOCITY = 1.57,
+    
+    -- Radio de detección de zona de carga (m)
+    -- Qué tan cerca debe estar el robot de C para empezar a cargar
+    -- Valores: 0.3 (preciso) | 0.5 (normal) | 1.0 (permisivo)
+    RECHARGE_RADIUS = 0.5,
+    
+    -- Umbral de realineación (m)
+    -- Si el robot está más lejos que esto del nodo, se realinea
+    -- Valores: 0.02 (muy preciso) | 0.05 (normal) | 0.1 (permisivo)
+    REALIGN_THRESHOLD = 0.05,
+    
+    -- BATERÍA - TIEMPOS REALISTAS
+    -- Meseta de descarga: tiempo que la batería se mantiene al 100%
+    -- Valores: 1800 (30 min) | 3600 (1 hora) | 7200 (2 horas)
+    DISCHARGE_PLATEAU_DURATION = 1800,
+    
+    -- Caída de descarga: tiempo que tarda en bajar de 100% a 0%
+    -- Valores: 300 (5 min rápido) | 600 (10 min) | 1200 (20 min)
+    DISCHARGE_FALL_DURATION = 300,
+    
+    -- Tiempo de carga completa: tiempo para cargar de 0% a 100%
+    -- Valores: 1800 (30 min) | 3600 (1 hora) | 7200 (2 horas)
+    CHARGE_DURATION = 3600,
+    
+    -- BATERÍA - TIEMPOS DE PRUEBA (descomentar para testing rápido)
+    -- DISCHARGE_PLATEAU_DURATION = 10,
+    -- DISCHARGE_FALL_DURATION = 5,
+    -- CHARGE_DURATION = 10,
+    
+    -- MENSAJES
+    -- Nivel de verbosidad: 0 (mínimo) | 1 (normal) | 2 (debug)
+    LOG_LEVEL = 1,
+    
+    -- Mostrar batería cada X% (debe ser divisor de 100)
+    -- Valores: 5 | 10 | 20 | 25
+    BATTERY_REPORT_INTERVAL = 10,
+}
+
+--[[
+================================================================================
+SCRIPT PRINCIPAL
+================================================================================
+--]]
+
 function sysCall_init()
     sim = require('sim')
     objectToFollowPath = sim.getObjectHandle('/PioneerP3DX')
     robot = sim.getObjectHandle('/PioneerP3DX')
 
-    velocity = 0.5 -- m/s (máximo ~0.5 m/s en terreno plano) --velocidades realistas supongo??
-    angularVelocity = 1.57 -- rad/s (~90 grados/s)
+    -- Aplicar configuración
+    velocity = CONFIG.VELOCITY
+    angularVelocity = CONFIG.ANGULAR_VELOCITY
+    rechargeRadius = CONFIG.RECHARGE_RADIUS
+    realignThreshold = CONFIG.REALIGN_THRESHOLD
+    dischargePhase1Duration = CONFIG.DISCHARGE_PLATEAU_DURATION
+    dischargePhase2Duration = CONFIG.DISCHARGE_FALL_DURATION
+    chargePhase1Duration = CONFIG.CHARGE_DURATION
+    logLevel = CONFIG.LOG_LEVEL
+    batteryReportInterval = CONFIG.BATTERY_REPORT_INTERVAL
+    
     sim.setStepping(true)
 
     -- Time tracking
     previousSimulationTime = sim.getSimulationTime()
 
-    -- Battery system (modelo de carga/descarga realista)
+    -- Battery system
     battery = 100.0
     lastBatteryReport = 100.0
     batteryDepleted = false
-    
-    -- Battery discharge model (2 phases)
-    dischargePhase1Duration = 1800 -- 30 minutos en meseta al 100%
-    dischargePhase2Duration = 300  -- 5 minutos de caída rápida de 100% a 0%
-    
-    -- Battery charge model (2 phases)
-    chargePhase1Duration = 3600    -- 1 hora de subida de 0% a 100%
+    batteryAtChargeStart = 100.0
     
     -- Battery state tracking
     isCharging = false
-    timeInCurrentPhase = 0  -- Tiempo acumulado en la fase actual
-    batteryPhase = 'discharge_plateau'  -- 'discharge_plateau', 'discharge_fall', 'charge_rise', 'charge_plateau'
+    timeInCurrentPhase = 0
+    batteryPhase = 'discharge_plateau'
     
     -- Charging station (dummy C)
     dummyHandle = nil
-    rechargeRadius = 0.5
     local ok, h = pcall(sim.getObjectHandle, 'C')
     if ok and type(h) == 'number' then
         dummyHandle = h
-        sim.addStatusbarMessage('Found charging dummy: C')
+        logMessage(1, 'INIT', 'Charging station found: C')
     else
-        sim.addStatusbarMessage('Charging dummy "C" not found')
+        logMessage(0, 'ERROR', 'Charging station "C" not found!')
     end
 
     -- Nodes in the scene
@@ -47,6 +220,7 @@ function sysCall_init()
             nodes[nodeName] = h
         end
     end
+    logMessage(1, 'INIT', 'Loaded ' .. tableLength(nodes) .. ' nodes')
 
     -- Bidirectional path graph
     graph = {
@@ -59,6 +233,42 @@ function sysCall_init()
     
     -- Current node tracking
     currentNode = 'R'
+    
+    logMessage(1, 'INIT', 'Robot starting at node: ' .. currentNode)
+    logMessage(1, 'INIT', 'Configuration loaded - Velocity: ' .. velocity .. ' m/s')
+end
+
+-- =================================
+-- LOGGING SYSTEM
+-- =================================
+
+function logMessage(level, category, message)
+    if level <= logLevel then
+        local timeStr = string.format('[%.1fs]', sim.getSimulationTime())
+        local prefix = ''
+        
+        if category == 'ERROR' then
+            prefix = '!!! '
+        elseif category == 'ACTION' then
+            prefix = '>>> '
+        elseif category == 'BATTERY' then
+            prefix = '[BAT] '
+        elseif category == 'NAV' then
+            prefix = '[NAV] '
+        elseif category == 'INIT' then
+            prefix = '[INIT] '
+        elseif category == 'DEBUG' then
+            prefix = '[DBG] '
+        end
+        
+        sim.addStatusbarMessage(timeStr .. ' ' .. prefix .. message)
+    end
+end
+
+function tableLength(t)
+    local count = 0
+    for _ in pairs(t) do count = count + 1 end
+    return count
 end
 
 -- =================================
@@ -79,37 +289,39 @@ function updateBattery(dt)
     if isCharging then
         -- CHARGING MODEL
         if batteryPhase == 'charge_rise' then
-            -- Phase 1: Rising from current battery to 100% 
-            -- Calculate where we should be in the rise based on time
-            local progress = timeInCurrentPhase / chargePhase1Duration
-            local targetBattery = battery + (100 - battery) * progress
+            local remainingCharge = 100 - batteryAtChargeStart
+            local timeToFull = chargePhase1Duration * (remainingCharge / 100)
             
-            if targetBattery >= 100 then
+            if timeToFull > 0 then
+                local progress = math.min(timeInCurrentPhase / timeToFull, 1.0)
+                battery = batteryAtChargeStart + remainingCharge * progress
+            else
+                battery = 100
+            end
+            
+            if battery >= 100 then
                 battery = 100
                 batteryPhase = 'charge_plateau'
                 timeInCurrentPhase = 0
-            else
-                battery = targetBattery
+                logMessage(2, 'BATTERY', 'Charge complete - entering plateau')
             end
             
         elseif batteryPhase == 'charge_plateau' then
-            -- Phase 2: Stay at 100%
             battery = 100
         end
         
     else
         -- DISCHARGING MODEL
         if batteryPhase == 'discharge_plateau' then
-            -- Phase 1: Stay at 100% for 30 minutes
             battery = 100
             
             if timeInCurrentPhase >= dischargePhase1Duration then
                 batteryPhase = 'discharge_fall'
                 timeInCurrentPhase = 0
+                logMessage(2, 'BATTERY', 'Plateau ended - starting discharge')
             end
             
         elseif batteryPhase == 'discharge_fall' then
-            -- Phase 2: Fall from 100% to 0% in 5 minutes
             local progress = timeInCurrentPhase / dischargePhase2Duration
             battery = 100 * (1 - progress)
             
@@ -119,67 +331,59 @@ function updateBattery(dt)
             end
             
         elseif batteryPhase == 'discharge_depleted' then
-            -- Phase 3: Stay at 0%
             battery = 0
         end
     end
     
-    -- Report battery at multiples of 10
-    local currentTier = math.floor(battery / 10) * 10
-    local lastTier = math.floor(lastBatteryReport / 10) * 10
-    if currentTier < lastTier then
-        sim.addStatusbarMessage(string.format('Battery: %d%%', currentTier))
+    -- Report battery at intervals
+    local currentTier = math.floor(battery / batteryReportInterval) * batteryReportInterval
+    local lastTier = math.floor(lastBatteryReport / batteryReportInterval) * batteryReportInterval
+    if currentTier ~= lastTier then
+        logMessage(1, 'BATTERY', string.format('%d%% [%s]', currentTier, batteryPhase))
         lastBatteryReport = battery
     end
     
     -- Mark as depleted if battery runs out
-    if battery <= 0 then
-        if not batteryDepleted then
-            batteryDepleted = true
-            sim.addStatusbarMessage('!!! BATTERY DEPLETED !!!')
-        end
+    if battery <= 0 and not batteryDepleted then
+        batteryDepleted = true
+        logMessage(0, 'ERROR', 'BATTERY DEPLETED - Calling operator!')
     end
 end
 
 function startCharging()
-    if isCharging then return end  -- Already charging
+    if isCharging then return end
     
     isCharging = true
+    batteryAtChargeStart = battery
     
-    -- Determine where to start in the charging model based on current battery
     if battery >= 100 then
         batteryPhase = 'charge_plateau'
         timeInCurrentPhase = 0
     else
         batteryPhase = 'charge_rise'
-        -- Calculate how much time we need to reach 100% from current battery
-        -- We want to continue the rise smoothly
         timeInCurrentPhase = 0
     end
     
-    sim.addStatusbarMessage('Started charging from ' .. string.format('%.1f%%', battery))
+    logMessage(1, 'BATTERY', string.format('Charging started at %.1f%%', battery))
 end
 
 function stopCharging()
-    if not isCharging then return end  -- Not charging
+    if not isCharging then return end
     
     isCharging = false
     
-    -- Determine where to start in the discharging model based on current battery
     if battery >= 100 then
         batteryPhase = 'discharge_plateau'
         timeInCurrentPhase = 0
     elseif battery > 0 then
-        -- We're somewhere in the middle, start the fall phase
         batteryPhase = 'discharge_fall'
-        -- Calculate time position in fall phase based on current battery
         timeInCurrentPhase = dischargePhase2Duration * (1 - battery / 100)
     else
         batteryPhase = 'discharge_depleted'
         timeInCurrentPhase = 0
     end
     
-    sim.addStatusbarMessage('Stopped charging at ' .. string.format('%.1f%%', battery))
+    logMessage(1, 'BATTERY', string.format('Charging stopped at %.1f%%', battery))
 end
 
 function tryRecharge()
@@ -189,16 +393,13 @@ function tryRecharge()
     local dpos = sim.getObjectPosition(dummyHandle, -1)
     local dx = rpos[1] - dpos[1]
     local dy = rpos[2] - dpos[2]
-    local dz = rpos[3] - dpos[3]
-    local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
+    local dist = math.sqrt(dx*dx + dy*dy)
     
     if dist <= rechargeRadius then
-        -- Inside charging zone
         if not isCharging then
             startCharging()
         end
     else
-        -- Outside charging zone
         if isCharging then
             stopCharging()
         end
@@ -291,19 +492,15 @@ function realignToNode(nodeName)
     local dy = nodePos[2] - robotPos[2]
     local dist = math.sqrt(dx*dx + dy*dy)
     
-    -- Only realign if offset is significant (>5cm)
-    if dist < 0.05 then return true end
+    if dist < realignThreshold then return true end
     
-    sim.addStatusbarMessage(string.format('Realigning to %s (offset: %.2fm)', nodeName, dist))
+    logMessage(2, 'NAV', string.format('Realigning to %s (offset: %.2fm)', nodeName, dist))
     
-    -- Rotate towards node
     local targetYaw = math.atan2(dy, dx)
     if not rotateTo(targetYaw) then return false end
     
-    -- Move to node
     if not moveToPosition(nodePos) then return false end
     
-    -- Final orientation adjustment
     local nodeOrient = sim.getObjectOrientation(nodes[nodeName], -1)
     sim.setObjectOrientation(robot, -1, nodeOrient)
     
@@ -313,18 +510,19 @@ end
 function followPath(pathName)
     if not isBatteryOk() then return false end
     
-    -- Get path
     local pathHandle = nil
     local success = pcall(function()
         pathHandle = sim.getObjectHandle(pathName)
     end)
-    if not success or not pathHandle then return false end
+    if not success or not pathHandle then 
+        logMessage(0, 'ERROR', 'Path not found: ' .. pathName)
+        return false 
+    end
     
     local pathData = sim.unpackDoubleTable(sim.readCustomDataBlock(pathHandle, 'PATH'))
     local m = Matrix(#pathData // 7, 7, pathData)
     local pathPositions = m:slice(1,1,m:rows(),3):data()
 
-    -- Determine path direction
     local robotPos = sim.getObjectPosition(robot, pathHandle)
     local startPos = {pathPositions[1], pathPositions[2], pathPositions[3]}
     local endPos = {pathPositions[#pathPositions-2], pathPositions[#pathPositions-1], pathPositions[#pathPositions]}
@@ -343,7 +541,6 @@ function followPath(pathName)
         pathPositions = reversed
     end
 
-    -- Offset path to robot position
     local robotStartPos = sim.getObjectPosition(robot, -1)
     local offset = {
         robotStartPos[1]-pathPositions[1], 
@@ -356,13 +553,11 @@ function followPath(pathName)
         pathPositions[i+2] = pathPositions[i+2] + offset[3]
     end
 
-    -- Orient to path start
     local dx = pathPositions[4] - pathPositions[1]
     local dy = pathPositions[5] - pathPositions[2]
     local targetYaw = math.atan2(dy, dx)
     if not rotateTo(targetYaw) then return false end
 
-    -- Follow path
     local pathLengths, totalLength = sim.getPathLengths(pathPositions, 3)
     local posAlongPath = 0
     previousSimulationTime = sim.getSimulationTime()
@@ -484,28 +679,26 @@ function goTo(targetNode)
     end
     
     if currentNode == targetNode then
-        sim.addStatusbarMessage('Already at ' .. targetNode)
+        logMessage(1, 'NAV', 'Already at ' .. targetNode)
         return true
     end
     
     local nodePath = findShortestPath(currentNode, targetNode)
     if #nodePath == 0 then
-        sim.addStatusbarMessage('No path found to ' .. targetNode)
+        logMessage(0, 'ERROR', 'No path found to ' .. targetNode)
         return false
     end
     
-    sim.addStatusbarMessage('Route: ' .. table.concat(nodePath, ' -> '))
+    logMessage(1, 'NAV', 'Route: ' .. table.concat(nodePath, ' -> '))
     
-    -- Realign to current node
     if not realignToNode(currentNode) then
-        sim.addStatusbarMessage('Aborted during initial realignment')
+        logMessage(1, 'NAV', 'Aborted during initial realignment')
         return false
     end
     
-    -- Follow each segment
     for i = 1, #nodePath-1 do
         if not isBatteryOk() then
-            sim.addStatusbarMessage('Aborted - battery depleted')
+            logMessage(1, 'NAV', 'Aborted - battery depleted')
             return false
         end
         
@@ -514,25 +707,26 @@ function goTo(targetNode)
         local pathName = graph[fromNode] and graph[fromNode][toNode]
         
         if not pathName then
-            sim.addStatusbarMessage('Path not found: ' .. fromNode .. ' -> ' .. toNode)
+            logMessage(0, 'ERROR', 'Path not found: ' .. fromNode .. ' -> ' .. toNode)
             return false
         end
         
+        logMessage(2, 'NAV', 'Following path: ' .. fromNode .. ' -> ' .. toNode)
+        
         if not followPath(pathName) then
-            sim.addStatusbarMessage('Path following interrupted')
+            logMessage(1, 'NAV', 'Path following interrupted')
             return false
         end
         
         currentNode = toNode
     end
     
-    -- Final realignment
     if not realignToNode(targetNode) then
-        sim.addStatusbarMessage('Aborted during final realignment')
+        logMessage(1, 'NAV', 'Aborted during final realignment')
         return false
     end
     
-    sim.addStatusbarMessage('Arrived at ' .. targetNode)
+    logMessage(1, 'NAV', 'Arrived at ' .. targetNode)
     return true
 end
 
@@ -541,7 +735,7 @@ function actionGoToRoom()
     
     local rooms = {'Hab1', 'Hab2', 'Hab3', 'C'}
     local randomRoom = rooms[math.random(1, #rooms)]
-    sim.addStatusbarMessage('>>> ACTION: Go to ' .. randomRoom)
+    logMessage(1, 'ACTION', 'Go to ' .. randomRoom)
     return goTo(randomRoom)
 end
 
@@ -549,7 +743,7 @@ function actionStop()
     if not isBatteryOk() then return false end
     
     local stopTime = math.random(1, 5)
-    sim.addStatusbarMessage('>>> ACTION: Stop for ' .. stopTime .. ' seconds')
+    logMessage(1, 'ACTION', 'Stop for ' .. stopTime .. ' seconds')
     local endTime = sim.getSimulationTime() + stopTime
     
     while sim.getSimulationTime() < endTime and not sim.getSimulationStopping() and isBatteryOk() do
@@ -566,63 +760,58 @@ function actionStop()
 end
 
 function callOperator()
-    sim.addStatusbarMessage('>>> CALLING OPERATOR <<<')
+    logMessage(1, 'ACTION', 'OPERATOR CALLED - Teleporting to charging station')
     
     if not dummyHandle then
-        sim.addStatusbarMessage('ERROR: Charging station not found!')
+        logMessage(0, 'ERROR', 'Charging station not found!')
         return
     end
     
-    -- Teleport to charging station
     local chargePos = sim.getObjectPosition(dummyHandle, -1)
     local chargeOrient = sim.getObjectOrientation(dummyHandle, -1)
+    
     sim.setObjectPosition(robot, -1, chargePos)
     sim.setObjectOrientation(robot, -1, chargeOrient)
     
     currentNode = 'C'
-    sim.addStatusbarMessage('Teleported to C')
     
-    -- Start charging
     startCharging()
-    
-    -- Reset flags
     batteryDepleted = false
-    
-    -- Reset time tracking
     previousSimulationTime = sim.getSimulationTime()
     
-    -- Wait while charging until battery is full
-    sim.addStatusbarMessage('Charging... (will take ~1 hour from 0%)')
+    logMessage(1, 'BATTERY', 'Charging until full...')
     while battery < 100.0 and not sim.getSimulationStopping() do
         local now = sim.getSimulationTime()
         local dt = now - previousSimulationTime
         previousSimulationTime = now
         
+        sim.setObjectPosition(robot, -1, chargePos)
+        sim.setObjectOrientation(robot, -1, chargeOrient)
+        
         updateBattery(dt)
         sim.step()
     end
     
-    sim.addStatusbarMessage('Battery fully charged - ready for new actions')
+    logMessage(1, 'ACTION', 'Charging complete - Ready for new actions')
 end
 
 -- =================================
 -- MAIN LOOP
 -- =================================
 function sysCall_thread()
-    local actions = {actionGoToRoom}--, actionStop}
+    local actions = {actionGoToRoom} --, actionStop}
+    
+    logMessage(1, 'INIT', '=== SIMULATION STARTED ===')
     
     while not sim.getSimulationStopping() do
-        -- Check if operator needed
         if batteryDepleted then
             callOperator()
         end
         
-        -- Execute random action
         if isBatteryOk() then
             local action = actions[math.random(1, #actions)]
             action()
             
-            -- Small pause between actions
             if isBatteryOk() then
                 local pauseTime = sim.getSimulationTime() + 0.5
                 while sim.getSimulationTime() < pauseTime and not sim.getSimulationStopping() and isBatteryOk() do
@@ -630,9 +819,12 @@ function sysCall_thread()
                     local dt = now - previousSimulationTime
                     previousSimulationTime = now
                     updateBattery(dt)
+                    tryRecharge()
                     sim.step()
                 end
             end
         end
     end
+    
+    logMessage(1, 'INIT', '=== SIMULATION ENDED ===')
 end
