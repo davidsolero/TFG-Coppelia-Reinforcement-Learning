@@ -177,6 +177,39 @@ function clearCommand()
     sim.setStringSignal('robot_command', '')
 end
 
+function resetEnvironment()
+    logMessage(1, 'CMD', 'RESET - Reiniciando entorno')
+    
+    -- Mover robot a posición inicial (nodo R)
+    if nodes['R'] then
+        local initPos = sim.getObjectPosition(nodes['R'], -1)
+        local initOrient = sim.getObjectOrientation(nodes['R'], -1)
+        sim.setObjectPosition(robot, -1, initPos)
+        sim.setObjectOrientation(robot, -1, initOrient)
+    end
+    
+    -- Reiniciar batería
+    battery = 100.0
+    lastBatteryReport = 100.0
+    batteryDepleted = false
+    batteryAtChargeStart = 100.0
+    isCharging = false
+    timeInCurrentPhase = 0
+    batteryPhase = 'discharge_plateau'
+    
+    -- Reiniciar nodo actual
+    currentNode = 'R'
+    
+    -- Reiniciar tiempo
+    previousSimulationTime = sim.getSimulationTime()
+    
+    -- Publicar estado y marcar como listo
+    publishState()
+    setStatus('ready')
+    
+    logMessage(1, 'CMD', 'RESET completado - Robot en R, batería 100%')
+end
+
 -- =================================
 -- UTILITY FUNCTIONS
 -- =================================
@@ -754,6 +787,10 @@ function parseAndExecuteCommand(cmd)
         
     elseif action == 'callOperator' then
         callOperator()
+        return true
+        
+    elseif action == 'reset' then
+        resetEnvironment()
         return true
         
     else
