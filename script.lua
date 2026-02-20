@@ -272,6 +272,17 @@ function tableLength(t)
 end
 
 -- =================================
+-- REMOTE API INTERFACE
+-- =================================
+
+function publishState()
+    sim.setInt32Signal('robot_battery', math.floor(battery))
+    sim.setStringSignal('robot_currentNode', currentNode or 'unknown')
+    sim.setStringSignal('robot_batteryPhase', batteryPhase)
+    sim.setInt32Signal('robot_isCharging', isCharging and 1 or 0)
+end
+
+-- =================================
 -- UTILITY FUNCTIONS
 -- =================================
 
@@ -428,6 +439,7 @@ function rotateTo(targetYaw)
         
         updateBattery(dt)
         tryRecharge()
+        publishState()
         
         if not isBatteryOk() then return false end
         
@@ -463,6 +475,7 @@ function moveToPosition(targetPos)
         
         updateBattery(dt)
         tryRecharge()
+        publishState()
         
         if not isBatteryOk() then return false end
         
@@ -569,6 +582,7 @@ function followPath(pathName)
 
         updateBattery(dt)
         tryRecharge()
+        publishState()
         
         if not isBatteryOk() then return false end
 
@@ -753,6 +767,7 @@ function actionStop()
         
         updateBattery(dt)
         tryRecharge()
+        publishState()
         sim.step()
     end
     
@@ -789,6 +804,7 @@ function callOperator()
         sim.setObjectOrientation(robot, -1, chargeOrient)
         
         updateBattery(dt)
+        publishState()
         sim.step()
     end
     
@@ -820,6 +836,7 @@ function sysCall_thread()
                     previousSimulationTime = now
                     updateBattery(dt)
                     tryRecharge()
+                    publishState()
                     sim.step()
                 end
             end
