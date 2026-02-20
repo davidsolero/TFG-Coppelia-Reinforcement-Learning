@@ -1,165 +1,40 @@
 --[[
 ================================================================================
-ROBOT NAVIGATION SCRIPT - DOCUMENTACIÓN
+ROBOT NAVIGATION SCRIPT v2 - CONTROLADO POR PYTHON
 ================================================================================
 
-DESCRIPCIÓN GENERAL
--------------------
-Este script implementa un sistema de navegación autónoma de alto nivel para un
-robot Pioneer P3DX en CoppeliaSim. El robot puede desplazarse entre ubicaciones
-predefinidas (nodos) siguiendo rutas (paths) mientras gestiona su batería de
-forma realista.
-
-El objetivo principal es servir como base para implementar aprendizaje por
-refuerzo (RL) para la toma de decisiones de alto nivel.
-
-ARQUITECTURA DEL SISTEMA
-------------------------
-El sistema se divide en capas:
-
-    +------------------------------------------+
-    |        CAPA DE ALTO NIVEL (RL)           |
-    |   Acciones: goTo, stop, callOperator     |
-    +------------------------------------------+
-                      |
-    +------------------------------------------+
-    |      CAPA DE PLANIFICACIÓN               |
-    |   Dijkstra, findShortestPath             |
-    +------------------------------------------+
-                      |
-    +------------------------------------------+
-    |      CAPA DE MOVIMIENTO                  |
-    |   followPath, rotateTo, moveToPosition   |
-    +------------------------------------------+
-                      |
-    +------------------------------------------+
-    |      CAPA DE SIMULACIÓN                  |
-    |   CoppeliaSim API, sim.step()            |
-    +------------------------------------------+
-
-NODOS DEL ENTORNO
------------------
-- R: Punto de inicio del robot (no se vuelve a él durante la operación)
-- Hab1, Hab2, Hab3: Habitaciones/ubicaciones de trabajo
-- C: Estación de carga
-
-CONECTIVIDAD
-------------
-Todas las habitaciones (Hab1, Hab2, Hab3) y la estación de carga (C) están
-conectadas entre sí mediante paths bidireccionales. El robot puede ir
-directamente de cualquier nodo a cualquier otro.
-
-El algoritmo de Dijkstra calcula la ruta más corta basándose en la longitud
-real de los paths, no en distancia euclidiana.
-
-MODELO DE BATERÍA
------------------
-El sistema implementa un modelo de batería bifásico realista:
-
-DESCARGA (cuando el robot NO está en zona de carga):
-    
-    Batería
-    100% |============== (Fase 1: Meseta) ==============|
-         |                                              |\
-         |                                              | \
-         |                                              |  \ (Fase 2: Caída)
-      0% |                                              |   \___________
-         +----------------------------------------------+--------------> Tiempo
-         0                                          t1              t1+t2
-    
-    - Fase 1 (discharge_plateau): Batería al 100% durante dischargePhase1Duration
-    - Fase 2 (discharge_fall): Caída lineal de 100% a 0% en dischargePhase2Duration
-    - Fase 3 (discharge_depleted): Batería a 0%, requiere operario
-
-CARGA (cuando el robot está en zona de carga):
-    
-    Batería
-    100% |                    ========================== (Fase 2: Meseta)
-         |                   /
-         |                  / (Fase 1: Subida)
-         |                 /
-      0% |________________/
-         +------------------------------------------------> Tiempo
-    
-    - Fase 1 (charge_rise): Subida lineal desde nivel actual hasta 100%
-    - Fase 2 (charge_plateau): Mantiene 100% mientras siga cargando
-
-    Nota: El tiempo de carga es proporcional a la batería que falta.
-    Si empieza al 50%, tarda la mitad de chargePhase1Duration.
-
-ACCIONES DE ALTO NIVEL
-----------------------
-1. actionGoToRoom(): Selecciona habitación aleatoria y navega hacia ella
-2. actionStop(): Detiene el robot durante 1-5 segundos (consume batería)
-3. callOperator(): Teletransporta a C y recarga (se llama automáticamente al agotar batería)
-
-PARÁMETROS CONFIGURABLES
-------------------------
-Ver sección CONFIGURATION PARAMETERS más abajo.
-
-INTEGRACIÓN CON RL (FUTURO)
----------------------------
-Este script está diseñado para integrarse con Python vía ZeroMQ Remote API.
-El agente RL podrá:
-- Observar: currentNode, battery, batteryPhase, isCharging
-- Actuar: goTo(nodo), stop()
-- Recibir recompensa basada en: tiempo operativo, eficiencia de desplazamiento
+CAMBIOS RESPECTO A v1:
+- El bucle principal ya NO elige acciones aleatorias
+- Espera comandos de Python via señales
+- Python envía: robot_command = "goTo:Hab1", "goTo:C", "stop", etc.
+- Lua ejecuta y responde con: robot_status = "idle", "moving", "charging", "arrived", "error"
 
 ================================================================================
 --]]
 
 --[[
 ================================================================================
-CONFIGURATION PARAMETERS - AJUSTA ESTOS VALORES
+CONFIGURATION PARAMETERS
 ================================================================================
 --]]
 
--- MOVIMIENTO
 local CONFIG = {
-    -- Velocidad lineal del robot (m/s)
-    -- Pioneer P3DX real: máximo ~1.2 m/s, recomendado 0.3-0.5 para interiores
-    -- Valores: 0.1 (muy lento) | 0.3 (cauteloso) | 0.5 (normal) | 0.8 (rápido)
     VELOCITY = 0.5,
-    
-    -- Velocidad angular (rad/s)
-    -- Pioneer P3DX real: máximo ~5.24 rad/s (~300°/s)
-    -- Valores: 0.5 (suave) | 1.57 (90°/s normal) | 3.14 (180°/s rápido)
     ANGULAR_VELOCITY = 1.57,
-    
-    -- Radio de detección de zona de carga (m)
-    -- Qué tan cerca debe estar el robot de C para empezar a cargar
-    -- Valores: 0.3 (preciso) | 0.5 (normal) | 1.0 (permisivo)
     RECHARGE_RADIUS = 0.5,
-    
-    -- Umbral de realineación (m)
-    -- Si el robot está más lejos que esto del nodo, se realinea
-    -- Valores: 0.02 (muy preciso) | 0.05 (normal) | 0.1 (permisivo)
     REALIGN_THRESHOLD = 0.05,
     
-    -- BATERÍA - TIEMPOS REALISTAS
-    -- Meseta de descarga: tiempo que la batería se mantiene al 100%
-    -- Valores: 1800 (30 min) | 3600 (1 hora) | 7200 (2 horas)
-    DISCHARGE_PLATEAU_DURATION = 1800,
+    -- BATERÍA - TIEMPOS DE PRUEBA (para testing rápido)
+    DISCHARGE_PLATEAU_DURATION = 30,  -- 30 segundos de meseta
+    DISCHARGE_FALL_DURATION = 20,     -- 20 segundos de caída
+    CHARGE_DURATION = 15,             -- 15 segundos para cargar
     
-    -- Caída de descarga: tiempo que tarda en bajar de 100% a 0%
-    -- Valores: 300 (5 min rápido) | 600 (10 min) | 1200 (20 min)
-    DISCHARGE_FALL_DURATION = 300,
+    -- BATERÍA - TIEMPOS REALISTAS (descomentar para uso real)
+    -- DISCHARGE_PLATEAU_DURATION = 1800,
+    -- DISCHARGE_FALL_DURATION = 300,
+    -- CHARGE_DURATION = 3600,
     
-    -- Tiempo de carga completa: tiempo para cargar de 0% a 100%
-    -- Valores: 1800 (30 min) | 3600 (1 hora) | 7200 (2 horas)
-    CHARGE_DURATION = 3600,
-    
-    -- BATERÍA - TIEMPOS DE PRUEBA (descomentar para testing rápido)
-    -- DISCHARGE_PLATEAU_DURATION = 10,
-    -- DISCHARGE_FALL_DURATION = 5,
-    -- CHARGE_DURATION = 10,
-    
-    -- MENSAJES
-    -- Nivel de verbosidad: 0 (mínimo) | 1 (normal) | 2 (debug)
     LOG_LEVEL = 1,
-    
-    -- Mostrar batería cada X% (debe ser divisor de 100)
-    -- Valores: 5 | 10 | 20 | 25
     BATTERY_REPORT_INTERVAL = 10,
 }
 
@@ -201,7 +76,7 @@ function sysCall_init()
     timeInCurrentPhase = 0
     batteryPhase = 'discharge_plateau'
     
-    -- Charging station (dummy C)
+    -- Charging station
     dummyHandle = nil
     local ok, h = pcall(sim.getObjectHandle, 'C')
     if ok and type(h) == 'number' then
@@ -234,8 +109,12 @@ function sysCall_init()
     -- Current node tracking
     currentNode = 'R'
     
+    -- Command system
+    sim.setStringSignal('robot_command', '')
+    sim.setStringSignal('robot_status', 'idle')
+    
     logMessage(1, 'INIT', 'Robot starting at node: ' .. currentNode)
-    logMessage(1, 'INIT', 'Configuration loaded - Velocity: ' .. velocity .. ' m/s')
+    logMessage(1, 'INIT', 'Waiting for Python commands...')
 end
 
 -- =================================
@@ -257,6 +136,8 @@ function logMessage(level, category, message)
             prefix = '[NAV] '
         elseif category == 'INIT' then
             prefix = '[INIT] '
+        elseif category == 'CMD' then
+            prefix = '[CMD] '
         elseif category == 'DEBUG' then
             prefix = '[DBG] '
         end
@@ -280,6 +161,20 @@ function publishState()
     sim.setStringSignal('robot_currentNode', currentNode or 'unknown')
     sim.setStringSignal('robot_batteryPhase', batteryPhase)
     sim.setInt32Signal('robot_isCharging', isCharging and 1 or 0)
+    sim.setInt32Signal('robot_batteryDepleted', batteryDepleted and 1 or 0)
+end
+
+function setStatus(status)
+    sim.setStringSignal('robot_status', status)
+end
+
+function getCommand()
+    local cmd = sim.getStringSignal('robot_command')
+    return cmd
+end
+
+function clearCommand()
+    sim.setStringSignal('robot_command', '')
 end
 
 -- =================================
@@ -298,7 +193,6 @@ function updateBattery(dt)
     timeInCurrentPhase = timeInCurrentPhase + dt
     
     if isCharging then
-        -- CHARGING MODEL
         if batteryPhase == 'charge_rise' then
             local remainingCharge = 100 - batteryAtChargeStart
             local timeToFull = chargePhase1Duration * (remainingCharge / 100)
@@ -322,7 +216,6 @@ function updateBattery(dt)
         end
         
     else
-        -- DISCHARGING MODEL
         if batteryPhase == 'discharge_plateau' then
             battery = 100
             
@@ -346,7 +239,6 @@ function updateBattery(dt)
         end
     end
     
-    -- Report battery at intervals
     local currentTier = math.floor(battery / batteryReportInterval) * batteryReportInterval
     local lastTier = math.floor(lastBatteryReport / batteryReportInterval) * batteryReportInterval
     if currentTier ~= lastTier then
@@ -354,10 +246,10 @@ function updateBattery(dt)
         lastBatteryReport = battery
     end
     
-    -- Mark as depleted if battery runs out
     if battery <= 0 and not batteryDepleted then
         batteryDepleted = true
-        logMessage(0, 'ERROR', 'BATTERY DEPLETED - Calling operator!')
+        setStatus('depleted')
+        logMessage(0, 'ERROR', 'BATTERY DEPLETED!')
     end
 end
 
@@ -686,7 +578,16 @@ end
 -- =================================
 
 function goTo(targetNode)
-    if not isBatteryOk() then return false end
+    if not isBatteryOk() then 
+        setStatus('depleted')
+        return false 
+    end
+    
+    if not nodes[targetNode] then
+        logMessage(0, 'ERROR', 'Unknown node: ' .. targetNode)
+        setStatus('error')
+        return false
+    end
     
     if not currentNode then
         currentNode = getClosestNode()
@@ -694,12 +595,16 @@ function goTo(targetNode)
     
     if currentNode == targetNode then
         logMessage(1, 'NAV', 'Already at ' .. targetNode)
+        setStatus('arrived')
         return true
     end
+    
+    setStatus('moving')
     
     local nodePath = findShortestPath(currentNode, targetNode)
     if #nodePath == 0 then
         logMessage(0, 'ERROR', 'No path found to ' .. targetNode)
+        setStatus('error')
         return false
     end
     
@@ -707,12 +612,14 @@ function goTo(targetNode)
     
     if not realignToNode(currentNode) then
         logMessage(1, 'NAV', 'Aborted during initial realignment')
+        setStatus('depleted')
         return false
     end
     
     for i = 1, #nodePath-1 do
         if not isBatteryOk() then
             logMessage(1, 'NAV', 'Aborted - battery depleted')
+            setStatus('depleted')
             return false
         end
         
@@ -722,6 +629,7 @@ function goTo(targetNode)
         
         if not pathName then
             logMessage(0, 'ERROR', 'Path not found: ' .. fromNode .. ' -> ' .. toNode)
+            setStatus('error')
             return false
         end
         
@@ -729,36 +637,36 @@ function goTo(targetNode)
         
         if not followPath(pathName) then
             logMessage(1, 'NAV', 'Path following interrupted')
+            setStatus('depleted')
             return false
         end
         
         currentNode = toNode
+        publishState()
     end
     
     if not realignToNode(targetNode) then
         logMessage(1, 'NAV', 'Aborted during final realignment')
+        setStatus('depleted')
         return false
     end
     
     logMessage(1, 'NAV', 'Arrived at ' .. targetNode)
+    setStatus('arrived')
     return true
 end
 
-function actionGoToRoom()
-    if not isBatteryOk() then return false end
+function actionStop(duration)
+    if not isBatteryOk() then 
+        setStatus('depleted')
+        return false 
+    end
     
-    local rooms = {'Hab1', 'Hab2', 'Hab3', 'C'}
-    local randomRoom = rooms[math.random(1, #rooms)]
-    logMessage(1, 'ACTION', 'Go to ' .. randomRoom)
-    return goTo(randomRoom)
-end
-
-function actionStop()
-    if not isBatteryOk() then return false end
+    duration = duration or 1
+    logMessage(1, 'ACTION', 'Stop for ' .. duration .. ' seconds')
+    setStatus('stopped')
     
-    local stopTime = math.random(1, 5)
-    logMessage(1, 'ACTION', 'Stop for ' .. stopTime .. ' seconds')
-    local endTime = sim.getSimulationTime() + stopTime
+    local endTime = sim.getSimulationTime() + duration
     
     while sim.getSimulationTime() < endTime and not sim.getSimulationStopping() and isBatteryOk() do
         local now = sim.getSimulationTime()
@@ -771,14 +679,22 @@ function actionStop()
         sim.step()
     end
     
+    if isBatteryOk() then
+        setStatus('idle')
+    else
+        setStatus('depleted')
+    end
+    
     return isBatteryOk()
 end
 
 function callOperator()
     logMessage(1, 'ACTION', 'OPERATOR CALLED - Teleporting to charging station')
+    setStatus('operator_called')
     
     if not dummyHandle then
         logMessage(0, 'ERROR', 'Charging station not found!')
+        setStatus('error')
         return
     end
     
@@ -794,7 +710,9 @@ function callOperator()
     batteryDepleted = false
     previousSimulationTime = sim.getSimulationTime()
     
+    setStatus('charging')
     logMessage(1, 'BATTERY', 'Charging until full...')
+    
     while battery < 100.0 and not sim.getSimulationStopping() do
         local now = sim.getSimulationTime()
         local dt = now - previousSimulationTime
@@ -808,39 +726,78 @@ function callOperator()
         sim.step()
     end
     
-    logMessage(1, 'ACTION', 'Charging complete - Ready for new actions')
+    setStatus('idle')
+    logMessage(1, 'ACTION', 'Charging complete - Ready for new commands')
 end
 
 -- =================================
--- MAIN LOOP
+-- COMMAND PARSER
 -- =================================
-function sysCall_thread()
-    local actions = {actionGoToRoom} --, actionStop}
+
+function parseAndExecuteCommand(cmd)
+    if not cmd or cmd == '' then
+        return false
+    end
     
+    logMessage(1, 'CMD', 'Received: ' .. cmd)
+    clearCommand()
+    
+    -- Parse command
+    local action, param = cmd:match('([^:]+):?(.*)')
+    
+    if action == 'goTo' and param ~= '' then
+        return goTo(param)
+        
+    elseif action == 'stop' then
+        local duration = tonumber(param) or 1
+        return actionStop(duration)
+        
+    elseif action == 'callOperator' then
+        callOperator()
+        return true
+        
+    else
+        logMessage(0, 'ERROR', 'Unknown command: ' .. cmd)
+        setStatus('error')
+        return false
+    end
+end
+
+-- =================================
+-- MAIN LOOP - ESPERA COMANDOS DE PYTHON
+-- =================================
+
+function sysCall_thread()
     logMessage(1, 'INIT', '=== SIMULATION STARTED ===')
+    logMessage(1, 'INIT', '=== WAITING FOR PYTHON COMMANDS ===')
     
     while not sim.getSimulationStopping() do
-        if batteryDepleted then
-            callOperator()
-        end
+        local now = sim.getSimulationTime()
+        local dt = now - previousSimulationTime
+        previousSimulationTime = now
         
-        if isBatteryOk() then
-            local action = actions[math.random(1, #actions)]
-            action()
-            
-            if isBatteryOk() then
-                local pauseTime = sim.getSimulationTime() + 0.5
-                while sim.getSimulationTime() < pauseTime and not sim.getSimulationStopping() and isBatteryOk() do
-                    local now = sim.getSimulationTime()
-                    local dt = now - previousSimulationTime
-                    previousSimulationTime = now
-                    updateBattery(dt)
-                    tryRecharge()
-                    publishState()
-                    sim.step()
-                end
+        -- Siempre actualizar batería y estado
+        updateBattery(dt)
+        tryRecharge()
+        publishState()
+        
+        -- Verificar si hay batería
+        if batteryDepleted then
+            -- Esperar comando callOperator de Python o hacerlo automático
+            local cmd = getCommand()
+            if cmd == 'callOperator' then
+                clearCommand()
+                callOperator()
+            end
+        else
+            -- Verificar si hay comando pendiente
+            local cmd = getCommand()
+            if cmd and cmd ~= '' then
+                parseAndExecuteCommand(cmd)
             end
         end
+        
+        sim.step()
     end
     
     logMessage(1, 'INIT', '=== SIMULATION ENDED ===')
