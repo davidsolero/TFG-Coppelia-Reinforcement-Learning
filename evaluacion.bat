@@ -1,19 +1,19 @@
 @echo off
 echo ============================================
-echo EJECUTANDO ENTRENAMIENTO EN MODO HEADLESS
+echo EVALUACION DEL MODELO PPO
 echo ============================================
 
 echo.
-echo Iniciando CoppeliaSim headless...
-start "" "C:\Program Files\CoppeliaRobotics\CoppeliaSimEdu\coppeliaSim.exe" -h "C:\Users\usuario\Documents\GitHub\TFG-Coppelia-Reinforcement-Learning\entornoRobotVigilancia.ttt"
+echo Iniciando CoppeliaSim (con interfaz grafica)...
+start "" "C:\Program Files\CoppeliaRobotics\CoppeliaSimEdu\coppeliaSim.exe" "C:\Users\usuario\Documents\GitHub\TFG-Coppelia-Reinforcement-Learning\entornoRobotVigilancia.ttt"
 
-echo Esperando 10 segundos a que CoppeliaSim cargue...
-timeout /t 10 /nobreak
+echo Esperando 15 segundos a que CoppeliaSim cargue...
+timeout /t 15 /nobreak
 
 echo.
-echo Ejecutando entrenamiento...
+echo Ejecutando evaluacion...
 cd C:\Users\usuario\Documents\GitHub\TFG-Coppelia-Reinforcement-Learning
-python train.py
+python evaluate.py
 
 echo.
 echo Cerrando CoppeliaSim...

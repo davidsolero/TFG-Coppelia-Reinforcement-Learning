@@ -5,8 +5,8 @@ ROBOT NAVIGATION SCRIPT v2 - CONTROLADO POR PYTHON
 
 CAMBIOS RESPECTO A v1:
 - El bucle principal ya NO elige acciones aleatorias
-- Espera comandos de Python via señales
-- Python envía: robot_command = "goTo:Hab1", "goTo:C", "stop", etc.
+- Espera comandos de Python via se?ales
+- Python env?a: robot_command = "goTo:Hab1", "goTo:C", "stop", etc.
 - Lua ejecuta y responde con: robot_status = "idle", "moving", "charging", "arrived", "error"
 
 ================================================================================
@@ -19,17 +19,29 @@ CONFIGURATION PARAMETERS
 --]]
 
 local CONFIG = {
-    VELOCITY = 0.5,
-    ANGULAR_VELOCITY = 1.57,
+    --VELOCITY = 0.5,       -- Velocidades normales
+    --ANGULAR_VELOCITY = 1.57,  
+    VELOCITY = 2.0,        -- x4 m?s r?pido
+    ANGULAR_VELOCITY = 6.0, -- x4 m?s r?pido
+    
     RECHARGE_RADIUS = 0.5,
     REALIGN_THRESHOLD = 0.05,
     
-    -- BATERÍA - TIEMPOS DE PRUEBA (para testing rápido)
-    DISCHARGE_PLATEAU_DURATION = 30,  -- 30 segundos de meseta
-    DISCHARGE_FALL_DURATION = 20,     -- 20 segundos de caída
-    CHARGE_DURATION = 15,             -- 15 segundos para cargar
+    -- BATER?A - TIEMPOS DE PRUEBA (para testing r?pido)
+    --DISCHARGE_PLATEAU_DURATION = 30,  -- 30 segundos de meseta
+    --DISCHARGE_FALL_DURATION = 20,     -- 20 segundos de ca?da
+    --CHARGE_DURATION = 15,             -- 15 segundos para cargar
     
-    -- BATERÍA - TIEMPOS REALISTAS (descomentar para uso real)
+    DISCHARGE_PLATEAU_DURATION = 20,  -- ~5 movimientos gratis
+    DISCHARGE_FALL_DURATION = 55,     -- ~13 movimientos con presi?n creciente
+    CHARGE_DURATION = 20,             -- carga relativamente r?pida
+    
+    -- BATER?A - TRAINING
+    --DISCHARGE_PLATEAU_DURATION = 60,   -- ~4 movimientos gratis
+    --DISCHARGE_FALL_DURATION = 120,     -- ~8 movimientos para aprender a ir a C
+    --CHARGE_DURATION = 40,              -- carga r?pida pero no instant?nea
+    
+    -- BATER?A - TIEMPOS REALISTAS (descomentar para uso real)
     -- DISCHARGE_PLATEAU_DURATION = 1800,
     -- DISCHARGE_FALL_DURATION = 300,
     -- CHARGE_DURATION = 3600,
@@ -49,7 +61,7 @@ function sysCall_init()
     objectToFollowPath = sim.getObjectHandle('/PioneerP3DX')
     robot = sim.getObjectHandle('/PioneerP3DX')
 
-    -- Aplicar configuración
+    -- Aplicar configuraci?n
     velocity = CONFIG.VELOCITY
     angularVelocity = CONFIG.ANGULAR_VELOCITY
     rechargeRadius = CONFIG.RECHARGE_RADIUS
@@ -146,8 +158,8 @@ function logMessage(level, category, message)
     end
 end
 
--- Cuenta el número de elementos en una tabla con claves no numéricas.
--- Lua no tiene función nativa para esto (# solo funciona con arrays numéricos).
+-- Cuenta el n?mero de elementos en una tabla con claves no num?ricas.
+-- Lua no tiene funci?n nativa para esto (# solo funciona con arrays num?ricos).
 -- Ejemplo: tableLength({R=1, Hab1=2, C=3}) devuelve 3
 function tableLength(t)
     local count = 0
@@ -168,16 +180,16 @@ function publishState()
 end
 
 function setStatus(status)
-    -- Estados válidos:
+    -- Estados v?lidos:
     --   "idle"            -> Robot esperando comandos
     --   "ready"           -> Tras reset, listo para empezar
     --   "moving"          -> Ejecutando goTo
-    --   "arrived"         -> Llegó al destino
+    --   "arrived"         -> Lleg? al destino
     --   "stopped"         -> Ejecutando actionStop
-    --   "depleted"        -> Batería agotada
+    --   "depleted"        -> Bater?a agotada
     --   "charging"        -> Cargando (durante callOperator)
     --   "operator_called" -> Momento de teletransporte a C
-    --   "error"           -> Comando inválido o path no encontrado
+    --   "error"           -> Comando inv?lido o path no encontrado
     sim.setStringSignal('robot_status', status)
 end
 
@@ -193,7 +205,7 @@ end
 function resetEnvironment()
     logMessage(1, 'CMD', 'RESET - Reiniciando entorno')
     
-    -- Mover robot a posición inicial (nodo R)
+    -- Mover robot a posici?n inicial (nodo R)
     if nodes['R'] then
         local initPos = sim.getObjectPosition(nodes['R'], -1)
         local initOrient = sim.getObjectOrientation(nodes['R'], -1)
@@ -201,7 +213,7 @@ function resetEnvironment()
         sim.setObjectOrientation(robot, -1, initOrient)
     end
     
-    -- Reiniciar batería
+    -- Reiniciar bater?a
     battery = 100.0
     lastBatteryReport = 100.0
     batteryDepleted = false
@@ -220,7 +232,7 @@ function resetEnvironment()
     publishState()
     setStatus('ready')
     
-    logMessage(1, 'CMD', 'RESET completado - Robot en R, batería 100%')
+    logMessage(1, 'CMD', 'RESET completado - Robot en R, bater?a 100%')
 end
 
 -- =================================
@@ -826,23 +838,27 @@ function sysCall_thread()
         local dt = now - previousSimulationTime
         previousSimulationTime = now
         
-        -- Siempre actualizar batería y estado
+        -- Siempre actualizar bater?a y estado
         updateBattery(dt)
         tryRecharge()
         publishState()
         
-        -- Verificar si hay batería
-        if batteryDepleted then
-            -- Esperar comando callOperator de Python o hacerlo automático
-            local cmd = getCommand()
-            if cmd == 'callOperator' then
-                clearCommand()
-                callOperator()
-            end
-        else
-            -- Verificar si hay comando pendiente
-            local cmd = getCommand()
-            if cmd and cmd ~= '' then
+        -- Verificar si hay comando pendiente
+        -- NOTA: cuando batteryDepleted=true, solo se aceptan 'callOperator' y 'reset'.
+        -- El reset permite a Python (SB3) iniciar un nuevo episodio sin necesidad de
+        -- pasar por callOperator. En la tarea final esto no ocurrir? porque el agente
+        -- llamar? a callOperator antes de que la bater?a llegue a 0.
+        local cmd = getCommand()
+        if cmd and cmd ~= '' then
+            if batteryDepleted then
+                if cmd == 'callOperator' or cmd == 'reset' then
+                    parseAndExecuteCommand(cmd)
+                else
+                    -- Ignorar otros comandos con bater?a agotada
+                    clearCommand()
+                    logMessage(1, 'CMD', 'Ignored (battery depleted): ' .. cmd)
+                end
+            else
                 parseAndExecuteCommand(cmd)
             end
         end
