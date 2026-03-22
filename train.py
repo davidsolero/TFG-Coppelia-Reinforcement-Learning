@@ -16,19 +16,17 @@ from robot_env import RobotEnv
 
 # ── Parámetros ────────────────────────────────────────────────────────────────
 
-TOTAL_TIMESTEPS  = 100_000   # Pasos totales de entrenamiento
-MAX_STEPS_EP     = 50       # Pasos máximos por episodio (truncation)
-LOG_DIR          = "./logs/" # Directorio para TensorBoard
-MODEL_PATH       = "./models/ppo_robot"  # Dónde guardar el modelo final
-TRACE            = False    # True para ver logs paso a paso
+TOTAL_TIMESTEPS  = 20_000
+MAX_STEPS_EP     = 50
+LOG_DIR          = "./logs/exp2_sin_C_en_media/"
+MODEL_PATH       = "./models/exp2_sin_C_en_media/ppo_robot"
+TRACE            = False
 
 # ── Entorno ───────────────────────────────────────────────────────────────────
 
 print("Creando entorno...")
 env = RobotEnv(max_steps=MAX_STEPS_EP, trace=TRACE)
 
-# Verificación automática de compatibilidad con Gymnasium/SB3
-# Comenta esta línea si ralentiza el arranque
 print("Verificando entorno...")
 check_env(env, warn=True)
 
@@ -36,9 +34,9 @@ check_env(env, warn=True)
 
 print("Creando modelo PPO...")
 model = PPO(
-    policy          = "MlpPolicy",  # Red neuronal densa (Multi-Layer Perceptron)
+    policy          = "MlpPolicy",
     env             = env,
-    verbose         = 1,            # Imprime progreso cada pocos episodios
+    verbose         = 1,
     tensorboard_log = LOG_DIR,
 )
 
@@ -49,14 +47,14 @@ print(f"Para ver curvas: tensorboard --logdir {LOG_DIR}\n")
 
 model.learn(
     total_timesteps    = TOTAL_TIMESTEPS,
-    tb_log_name        = "PPO_robot",   # Nombre de la run en TensorBoard
+    tb_log_name        = "exp2_sin_C_en_media",
     progress_bar       = True,
 )
 
 # ── Guardar modelo ────────────────────────────────────────────────────────────
 
 import os
-os.makedirs("./models", exist_ok=True)
+os.makedirs(f"./models/exp2_sin_C_en_media", exist_ok=True)
 model.save(MODEL_PATH)
 print(f"\nModelo guardado en: {MODEL_PATH}")
 

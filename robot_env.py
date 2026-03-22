@@ -17,9 +17,13 @@ Acciones (Discrete(4)):
     3 -> goTo:C
 
 Recompensa:
-    - Visitar una habitación (Hab1/Hab2/Hab3) que esté por debajo de la media
-      de visitas del episodio: +1.0
+    - Visitar una habitación (Hab1/Hab2/Hab3) por debajo de la media de visitas: +1.0
+    - Visitar una habitación por encima de la media: 0.0 (sin penalización explícita)
     - Batería agotada (terminated): -10.0
+
+    C NO entra en el cálculo de la media (exp2).
+    La media solo considera las habitaciones. Ir a C no sube la media ni
+    penaliza implícitamente. Las acciones nulas no cuentan como paso.
 """
 
 import gymnasium as gym
@@ -45,7 +49,8 @@ NODE_TO_IDX = {
     'R':    3   # Solo ocurre al inicio; lo tratamos como C a efectos de observación
 }
 
-ROOM_NODES = ['Hab1', 'Hab2', 'Hab3']  # Nodos con recompensa de visita
+# C NO incluida en visit_counts (exp2): la media solo considera habitaciones
+ROOM_NODES = ['Hab1', 'Hab2', 'Hab3']
 
 
 class RobotCoppeliaSim:
@@ -90,7 +95,6 @@ class RobotCoppeliaSim:
             if state['status'] in target_statuses:
                 return state
             time.sleep(0.05)
-        # Timeout: devolver estado actual igualmente
         return self.get_state()
 
     def reset(self):
@@ -111,6 +115,9 @@ class RobotEnv(gym.Env):
     """
     Entorno Gymnasium para el robot de vigilancia en CoppeliaSim.
     Tarea: visitar habitaciones eficientemente gestionando la batería.
+
+    C NO entra en el cálculo de la media (exp2).
+    Las acciones nulas (ir a un nodo donde ya estás) no cuentan como paso.
     """
 
     metadata = {"render_modes": []}
@@ -126,21 +133,17 @@ class RobotEnv(gym.Env):
         )
         print("Observation space: {}".format(self.observation_space))
 
-        # Espacio de acciones: 4 destinos posibles
         self.action_space = gym.spaces.Discrete(4)
         print("Action space: {}".format(self.action_space))
 
-        # Parámetros del episodio
         self._max_steps = max_steps
         self._trace     = trace
 
-        # Contadores internos (inicializados a valores válidos, no None)
         self._numep             = -1
         self._numstepsinepisode = 0
         self._accreward         = 0.0
         self._visit_counts      = {'Hab1': 0, 'Hab2': 0, 'Hab3': 0}
 
-        # Conexión con CoppeliaSim
         self._robot = RobotCoppeliaSim()
 
     def close(self):
@@ -169,25 +172,40 @@ class RobotEnv(gym.Env):
         truncated  = False
         reward     = 0.0
 
-        target_node = ACTION_TO_NODE[action]
+        target_node = ACTION_TO_NODE[int(action)]
 
         if self._trace:
             print(f"\tAction: {action} -> goTo:{target_node}")
 
-        # Ejecutar acción en Coppelia y esperar resultado
+        # Comprobar si el robot ya está en el destino ANTES de enviar el comando.
+        # Si ya estaba ahí, la acción es nula: no cuenta como paso ni genera
+        # recompensa. Elimina el exploit de quedarse en C/Hab repetidamente sin coste.
+        current_state = self._robot.get_state()
+        already_there = (current_state['node'] == target_node)
+
         final_state = self._robot.go_to(target_node)
+
+        if already_there:
+            if self._trace:
+                print(f"\t(acción nula: ya estaba en {target_node}, no cuenta paso)")
+            return self._get_obs(), 0.0, False, False, self._get_info()
 
         # --- Calcular recompensa ---
 
         if final_state['depleted']:
             reward     = -10.0
             terminated = True
-        elif target_node in ROOM_NODES:
-            self._visit_counts[target_node] += 1
-            media = np.mean(list(self._visit_counts.values()))
-            visitas_antes = self._visit_counts[target_node] - 1
-            if visitas_antes < media - (1 / len(ROOM_NODES)):
-                reward = 1.0
+        else:
+            if target_node in ROOM_NODES:
+                visitas_antes = self._visit_counts[target_node]
+                self._visit_counts[target_node] += 1
+
+                media = np.mean(list(self._visit_counts.values()))
+
+                # Recompensar si estaba por debajo de la media
+                if visitas_antes < media:
+                    reward = 1.0
+                # Si está por encima, reward = 0 (sin penalización explícita)
 
         self._accreward += reward
 
@@ -216,8 +234,7 @@ class RobotEnv(gym.Env):
         return np.array([node_idx, battery, vis1, vis2, vis3], dtype=np.float32)
 
     def _get_info(self):
-        """Información auxiliar para logging.
-        
+        """
         IMPORTANTE: SB3 requiere que todos los valores sean floats o strings,
         nunca None ni enteros puros, para evitar errores en ep_info_buffer.
         """
