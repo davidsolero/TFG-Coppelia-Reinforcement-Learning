@@ -1,6 +1,6 @@
 @echo off
 echo ============================================
-echo EJECUTANDO ENTRENAMIENTO EN MODO HEADLESS
+echo EJECUTANDO TEST EN MODO HEADLESS
 echo ============================================
 
 echo.
@@ -11,9 +11,9 @@ echo Esperando 10 segundos a que CoppeliaSim cargue...
 timeout /t 10 /nobreak
 
 echo.
-echo Ejecutando entrenamiento...
+echo Ejecutando test de episodios...
 cd C:\Users\usuario\Documents\GitHub\TFG-Coppelia-Reinforcement-Learning
-python train.py
+python test_episodes.py
 
 echo.
 echo Cerrando CoppeliaSim...
