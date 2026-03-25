@@ -1,0 +1,580 @@
+============================================
+EVALUACION DEL MODELO PPO
+============================================
+
+Iniciando CoppeliaSim (con interfaz grafica)...
+Esperando 15 segundos a que CoppeliaSim cargue...
+
+Esperando  0 segundos, presione CTRL+C para salir ...
+
+Ejecutando evaluacion...
+2026-03-24 21:09:48.416289: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-03-24 21:09:49.982198: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+Conectando a CoppeliaSim...
+Observation space: Box(0.0, [  3. 100. 999. 999. 999. 999.], (6,), float32)
+Action space: Discrete(4)
+Cargando modelo: ./models/ppo_robot_Cmedia.zip
+Wrapping the env with a `Monitor` wrapper
+Wrapping the env in a DummyVecEnv.
+
+============================================================
+EVALUACIÓN: 10 episodios (deterministic=True)
+============================================================
+
+--- Episodio 1/10 ---
+  Paso  1: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  2: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  3: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  4: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  5: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  6: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  7: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  8: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  9: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 10: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 11: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 12: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 13: nodo=Hab2  batería=100.0%  reward=+1.0  acum=1.0
+  Paso 14: nodo=Hab2  batería=100.0%  reward=+0.0  acum=1.0
+  Paso 15: nodo=C     batería=100.0%  reward=+0.0  acum=1.0
+  Paso 16: nodo=C     batería=100.0%  reward=+1.0  acum=2.0
+  Paso 17: nodo=Hab3  batería=100.0%  reward=+1.0  acum=3.0
+  Paso 18: nodo=Hab3  batería=100.0%  reward=+1.0  acum=4.0
+  Paso 19: nodo=C     batería=100.0%  reward=+0.0  acum=4.0
+  Paso 20: nodo=C     batería=100.0%  reward=+1.0  acum=5.0
+  Paso 21: nodo=Hab2  batería=100.0%  reward=+1.0  acum=6.0
+  Paso 22: nodo=C     batería=100.0%  reward=+0.0  acum=6.0
+  Paso 23: nodo=C     batería=100.0%  reward=+1.0  acum=7.0
+  Paso 24: nodo=C     batería=100.0%  reward=+0.0  acum=7.0
+  Paso 25: nodo=C     batería=100.0%  reward=+1.0  acum=8.0
+  Paso 26: nodo=Hab3  batería=100.0%  reward=+1.0  acum=9.0
+  Paso 27: nodo=C     batería=100.0%  reward=+0.0  acum=9.0
+  Paso 28: nodo=C     batería=100.0%  reward=+0.0  acum=9.0
+  Paso 29: nodo=Hab3  batería=100.0%  reward=+1.0  acum=10.0
+  Paso 30: nodo=Hab3  batería=100.0%  reward=+0.0  acum=10.0
+  Paso 31: nodo=C     batería=100.0%  reward=+0.0  acum=10.0
+  Paso 32: nodo=Hab3  batería=100.0%  reward=+1.0  acum=11.0
+  Paso 33: nodo=C     batería=100.0%  reward=+0.0  acum=11.0
+  Paso 34: nodo=C     batería=100.0%  reward=+1.0  acum=12.0
+  Paso 35: nodo=C     batería=100.0%  reward=+0.0  acum=12.0
+  Paso 36: nodo=Hab3  batería=100.0%  reward=+1.0  acum=13.0
+  Paso 37: nodo=Hab3  batería=100.0%  reward=+0.0  acum=13.0
+  Paso 38: nodo=C     batería=100.0%  reward=+0.0  acum=13.0
+  Paso 39: nodo=Hab3  batería=100.0%  reward=+1.0  acum=14.0
+  Paso 40: nodo=C     batería=100.0%  reward=+0.0  acum=14.0
+  Paso 41: nodo=C     batería=100.0%  reward=+1.0  acum=15.0
+  Paso 42: nodo=Hab3  batería=100.0%  reward=+0.0  acum=15.0
+  Paso 43: nodo=C     batería=100.0%  reward=+0.0  acum=15.0
+  Paso 44: nodo=C     batería=100.0%  reward=+1.0  acum=16.0
+  Paso 45: nodo=Hab3  batería=100.0%  reward=+0.0  acum=16.0
+  Paso 46: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 47: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 48: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 49: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 50: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  -- Episodio completado (50 pasos)
+  Resumen: reward=16.0  pasos=50  habitaciones=2/3  cargas=11  depleted=NO
+
+--- Episodio 2/10 ---
+  Paso  1: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  2: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  3: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  4: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  5: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  6: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  7: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  8: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  9: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 10: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 11: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 12: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 13: nodo=Hab2  batería=100.0%  reward=+1.0  acum=1.0
+  Paso 14: nodo=Hab2  batería=100.0%  reward=+0.0  acum=1.0
+  Paso 15: nodo=C     batería=100.0%  reward=+0.0  acum=1.0
+  Paso 16: nodo=C     batería=100.0%  reward=+1.0  acum=2.0
+  Paso 17: nodo=Hab2  batería=100.0%  reward=+1.0  acum=3.0
+  Paso 18: nodo=Hab3  batería=100.0%  reward=+0.0  acum=3.0
+  Paso 19: nodo=Hab2  batería=100.0%  reward=+1.0  acum=4.0
+  Paso 20: nodo=C     batería=100.0%  reward=+0.0  acum=4.0
+  Paso 21: nodo=C     batería=100.0%  reward=+1.0  acum=5.0
+  Paso 22: nodo=Hab3  batería=100.0%  reward=+1.0  acum=6.0
+  Paso 23: nodo=C     batería=100.0%  reward=+0.0  acum=6.0
+  Paso 24: nodo=Hab3  batería=100.0%  reward=+1.0  acum=7.0
+  Paso 25: nodo=C     batería=100.0%  reward=+0.0  acum=7.0
+  Paso 26: nodo=Hab3  batería=100.0%  reward=+1.0  acum=8.0
+  Paso 27: nodo=C     batería=100.0%  reward=+0.0  acum=8.0
+  Paso 28: nodo=Hab3  batería=100.0%  reward=+1.0  acum=9.0
+  Paso 29: nodo=C     batería=100.0%  reward=+0.0  acum=9.0
+  Paso 30: nodo=Hab3  batería=100.0%  reward=+1.0  acum=10.0
+  Paso 31: nodo=Hab3  batería=100.0%  reward=+0.0  acum=10.0
+  Paso 32: nodo=C     batería=100.0%  reward=+0.0  acum=10.0
+  Paso 33: nodo=Hab3  batería=100.0%  reward=+1.0  acum=11.0
+  Paso 34: nodo=C     batería=100.0%  reward=+0.0  acum=11.0
+  Paso 35: nodo=C     batería=100.0%  reward=+1.0  acum=12.0
+  Paso 36: nodo=C     batería=100.0%  reward=+0.0  acum=12.0
+  Paso 37: nodo=Hab3  batería=100.0%  reward=+1.0  acum=13.0
+  Paso 38: nodo=Hab3  batería=100.0%  reward=+0.0  acum=13.0
+  Paso 39: nodo=C     batería=100.0%  reward=+0.0  acum=13.0
+  Paso 40: nodo=C     batería=100.0%  reward=+1.0  acum=14.0
+  Paso 41: nodo=C     batería=100.0%  reward=+0.0  acum=14.0
+  Paso 42: nodo=C     batería=100.0%  reward=+0.0  acum=14.0
+  Paso 43: nodo=C     batería=100.0%  reward=+1.0  acum=15.0
+  Paso 44: nodo=C     batería=100.0%  reward=+0.0  acum=15.0
+  Paso 45: nodo=C     batería=100.0%  reward=+0.0  acum=15.0
+  Paso 46: nodo=C     batería=100.0%  reward=+0.0  acum=15.0
+  Paso 47: nodo=Hab3  batería=100.0%  reward=+1.0  acum=16.0
+  Paso 48: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 49: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 50: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  -- Episodio completado (50 pasos)
+  Resumen: reward=16.0  pasos=50  habitaciones=2/3  cargas=11  depleted=NO
+
+--- Episodio 3/10 ---
+  Paso  1: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  2: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  3: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  4: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  5: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  6: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  7: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  8: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  9: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 10: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 11: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 12: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 13: nodo=Hab2  batería=100.0%  reward=+1.0  acum=1.0
+  Paso 14: nodo=C     batería=100.0%  reward=+0.0  acum=1.0
+  Paso 15: nodo=C     batería=100.0%  reward=+1.0  acum=2.0
+  Paso 16: nodo=Hab2  batería=100.0%  reward=+1.0  acum=3.0
+  Paso 17: nodo=C     batería=100.0%  reward=+0.0  acum=3.0
+  Paso 18: nodo=Hab3  batería=100.0%  reward=+1.0  acum=4.0
+  Paso 19: nodo=C     batería=100.0%  reward=+0.0  acum=4.0
+  Paso 20: nodo=Hab3  batería=100.0%  reward=+1.0  acum=5.0
+  Paso 21: nodo=C     batería=100.0%  reward=+0.0  acum=5.0
+  Paso 22: nodo=Hab2  batería=100.0%  reward=+1.0  acum=6.0
+  Paso 23: nodo=C     batería=100.0%  reward=+0.0  acum=6.0
+  Paso 24: nodo=Hab3  batería=100.0%  reward=+1.0  acum=7.0
+  Paso 25: nodo=Hab3  batería=100.0%  reward=+0.0  acum=7.0
+  Paso 26: nodo=Hab3  batería=100.0%  reward=+1.0  acum=8.0
+  Paso 27: nodo=Hab3  batería=100.0%  reward=+0.0  acum=8.0
+  Paso 28: nodo=Hab3  batería=100.0%  reward=+1.0  acum=9.0
+  Paso 29: nodo=C     batería=100.0%  reward=+0.0  acum=9.0
+  Paso 30: nodo=Hab3  batería=100.0%  reward=+1.0  acum=10.0
+  Paso 31: nodo=C     batería=100.0%  reward=+0.0  acum=10.0
+  Paso 32: nodo=C     batería=100.0%  reward=+1.0  acum=11.0
+  Paso 33: nodo=C     batería=100.0%  reward=+0.0  acum=11.0
+  Paso 34: nodo=C     batería=100.0%  reward=+0.0  acum=11.0
+  Paso 35: nodo=Hab3  batería=100.0%  reward=+1.0  acum=12.0
+  Paso 36: nodo=C     batería=100.0%  reward=+0.0  acum=12.0
+  Paso 37: nodo=C     batería=100.0%  reward=+1.0  acum=13.0
+  Paso 38: nodo=C     batería=100.0%  reward=+0.0  acum=13.0
+  Paso 39: nodo=C     batería=100.0%  reward=+0.0  acum=13.0
+  Paso 40: nodo=Hab3  batería=100.0%  reward=+1.0  acum=14.0
+  Paso 41: nodo=C     batería=100.0%  reward=+0.0  acum=14.0
+  Paso 42: nodo=C     batería=100.0%  reward=+0.0  acum=14.0
+  Paso 43: nodo=C     batería=100.0%  reward=+1.0  acum=15.0
+  Paso 44: nodo=C     batería=100.0%  reward=+0.0  acum=15.0
+  Paso 45: nodo=C     batería=100.0%  reward=+0.0  acum=15.0
+  Paso 46: nodo=C     batería=100.0%  reward=+0.0  acum=15.0
+  Paso 47: nodo=Hab3  batería=100.0%  reward=+1.0  acum=16.0
+  Paso 48: nodo=Hab3  batería=100.0%  reward=+0.0  acum=16.0
+  Paso 49: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 50: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  -- Episodio completado (50 pasos)
+  Resumen: reward=16.0  pasos=50  habitaciones=2/3  cargas=11  depleted=NO
+
+--- Episodio 4/10 ---
+  Paso  1: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  2: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  3: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  4: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  5: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  6: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  7: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  8: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  9: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 10: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 11: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 12: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 13: nodo=Hab2  batería=100.0%  reward=+1.0  acum=1.0
+  Paso 14: nodo=Hab2  batería=100.0%  reward=+0.0  acum=1.0
+  Paso 15: nodo=C     batería=100.0%  reward=+0.0  acum=1.0
+  Paso 16: nodo=Hab2  batería=100.0%  reward=+1.0  acum=2.0
+  Paso 17: nodo=Hab2  batería=100.0%  reward=+1.0  acum=3.0
+  Paso 18: nodo=C     batería=100.0%  reward=+0.0  acum=3.0
+  Paso 19: nodo=Hab3  batería=100.0%  reward=+1.0  acum=4.0
+  Paso 20: nodo=Hab3  batería=100.0%  reward=+1.0  acum=5.0
+  Paso 21: nodo=C     batería=100.0%  reward=+0.0  acum=5.0
+  Paso 22: nodo=Hab2  batería=100.0%  reward=+1.0  acum=6.0
+  Paso 23: nodo=C     batería=100.0%  reward=+0.0  acum=6.0
+  Paso 24: nodo=C     batería=100.0%  reward=+1.0  acum=7.0
+  Paso 25: nodo=Hab2  batería=100.0%  reward=+1.0  acum=8.0
+  Paso 26: nodo=Hab2  batería=100.0%  reward=+0.0  acum=8.0
+  Paso 27: nodo=C     batería=100.0%  reward=+0.0  acum=8.0
+  Paso 28: nodo=Hab3  batería=100.0%  reward=+1.0  acum=9.0
+  Paso 29: nodo=Hab3  batería=100.0%  reward=+1.0  acum=10.0
+  Paso 30: nodo=C     batería=100.0%  reward=+0.0  acum=10.0
+  Paso 31: nodo=Hab3  batería=100.0%  reward=+1.0  acum=11.0
+  Paso 32: nodo=Hab3  batería=100.0%  reward=+0.0  acum=11.0
+  Paso 33: nodo=C     batería=100.0%  reward=+0.0  acum=11.0
+  Paso 34: nodo=Hab3  batería=100.0%  reward=+1.0  acum=12.0
+  Paso 35: nodo=C     batería=100.0%  reward=+0.0  acum=12.0
+  Paso 36: nodo=C     batería=100.0%  reward=+1.0  acum=13.0
+  Paso 37: nodo=C     batería=100.0%  reward=+0.0  acum=13.0
+  Paso 38: nodo=Hab3  batería=100.0%  reward=+1.0  acum=14.0
+  Paso 39: nodo=Hab3  batería=100.0%  reward=+0.0  acum=14.0
+  Paso 40: nodo=C     batería=100.0%  reward=+0.0  acum=14.0
+  Paso 41: nodo=C     batería=100.0%  reward=+1.0  acum=15.0
+  Paso 42: nodo=C     batería=100.0%  reward=+0.0  acum=15.0
+  Paso 43: nodo=C     batería=100.0%  reward=+0.0  acum=15.0
+  Paso 44: nodo=C     batería=100.0%  reward=+1.0  acum=16.0
+  Paso 45: nodo=Hab3  batería=100.0%  reward=+0.0  acum=16.0
+  Paso 46: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 47: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 48: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 49: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 50: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  -- Episodio completado (50 pasos)
+  Resumen: reward=16.0  pasos=50  habitaciones=2/3  cargas=11  depleted=NO
+
+--- Episodio 5/10 ---
+  Paso  1: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  2: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  3: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  4: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  5: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  6: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  7: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  8: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  9: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 10: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 11: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 12: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 13: nodo=Hab2  batería=100.0%  reward=+1.0  acum=1.0
+  Paso 14: nodo=Hab2  batería=100.0%  reward=+0.0  acum=1.0
+  Paso 15: nodo=C     batería=100.0%  reward=+0.0  acum=1.0
+  Paso 16: nodo=C     batería=100.0%  reward=+1.0  acum=2.0
+  Paso 17: nodo=Hab3  batería=100.0%  reward=+1.0  acum=3.0
+  Paso 18: nodo=Hab3  batería=100.0%  reward=+1.0  acum=4.0
+  Paso 19: nodo=C     batería=100.0%  reward=+0.0  acum=4.0
+  Paso 20: nodo=C     batería=100.0%  reward=+1.0  acum=5.0
+  Paso 21: nodo=Hab2  batería=100.0%  reward=+1.0  acum=6.0
+  Paso 22: nodo=Hab2  batería=100.0%  reward=+0.0  acum=6.0
+  Paso 23: nodo=C     batería=100.0%  reward=+0.0  acum=6.0
+  Paso 24: nodo=Hab3  batería=100.0%  reward=+1.0  acum=7.0
+  Paso 25: nodo=C     batería=100.0%  reward=+0.0  acum=7.0
+  Paso 26: nodo=C     batería=100.0%  reward=+1.0  acum=8.0
+  Paso 27: nodo=Hab2  batería=100.0%  reward=+1.0  acum=9.0
+  Paso 28: nodo=Hab2  batería=100.0%  reward=+0.0  acum=9.0
+  Paso 29: nodo=C     batería=100.0%  reward=+0.0  acum=9.0
+  Paso 30: nodo=Hab3  batería=100.0%  reward=+1.0  acum=10.0
+  Paso 31: nodo=C     batería=100.0%  reward=+0.0  acum=10.0
+  Paso 32: nodo=C     batería=100.0%  reward=+1.0  acum=11.0
+  Paso 33: nodo=Hab3  batería=100.0%  reward=+1.0  acum=12.0
+  Paso 34: nodo=C     batería=100.0%  reward=+0.0  acum=12.0
+  Paso 35: nodo=C     batería=100.0%  reward=+0.0  acum=12.0
+  Paso 36: nodo=Hab3  batería=100.0%  reward=+1.0  acum=13.0
+  Paso 37: nodo=Hab3  batería=100.0%  reward=+0.0  acum=13.0
+  Paso 38: nodo=C     batería=100.0%  reward=+0.0  acum=13.0
+  Paso 39: nodo=Hab3  batería=100.0%  reward=+1.0  acum=14.0
+  Paso 40: nodo=C     batería=100.0%  reward=+0.0  acum=14.0
+  Paso 41: nodo=Hab3  batería=100.0%  reward=+1.0  acum=15.0
+  Paso 42: nodo=Hab3  batería=100.0%  reward=+0.0  acum=15.0
+  Paso 43: nodo=C     batería=100.0%  reward=+0.0  acum=15.0
+  Paso 44: nodo=Hab3  batería=100.0%  reward=+1.0  acum=16.0
+  Paso 45: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 46: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 47: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 48: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 49: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 50: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  -- Episodio completado (50 pasos)
+
+--- Episodio 6/10 ---
+  Paso  1: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  2: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  3: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  4: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  5: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  6: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  7: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  8: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  9: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 10: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 11: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 12: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 13: nodo=Hab2  batería=100.0%  reward=+1.0  acum=1.0
+  Paso 14: nodo=C     batería=100.0%  reward=+0.0  acum=1.0
+  Paso 15: nodo=Hab2  batería=100.0%  reward=+1.0  acum=2.0
+  Paso 16: nodo=Hab2  batería= 57.0%  reward=+0.0  acum=2.0
+  Paso 17: nodo=Hab3  batería= 53.0%  reward=+1.0  acum=3.0
+  Paso 18: nodo=Hab3  batería= 52.0%  reward=+1.0  acum=4.0
+  Paso 19: nodo=Hab3  batería= 52.0%  reward=+1.0  acum=5.0
+  Paso 20: nodo=Hab3  batería= 52.0%  reward=+1.0  acum=6.0
+  Paso 21: nodo=Hab3  batería= 51.0%  reward=+1.0  acum=7.0
+  Paso 22: nodo=Hab3  batería= 51.0%  reward=+0.0  acum=7.0
+  Paso 23: nodo=C     batería= 48.0%  reward=+0.0  acum=7.0
+  Paso 24: nodo=C     batería= 49.0%  reward=+0.0  acum=7.0
+  Paso 25: nodo=C     batería= 50.0%  reward=+0.0  acum=7.0
+  Paso 26: nodo=C     batería= 51.0%  reward=+0.0  acum=7.0
+  Paso 27: nodo=C     batería= 52.0%  reward=+0.0  acum=7.0
+  Paso 28: nodo=C     batería= 53.0%  reward=+0.0  acum=7.0
+  Paso 29: nodo=C     batería= 54.0%  reward=+0.0  acum=7.0
+  Paso 30: nodo=C     batería= 54.0%  reward=+0.0  acum=7.0
+  Paso 31: nodo=C     batería= 55.0%  reward=+0.0  acum=7.0
+  Paso 32: nodo=C     batería= 56.0%  reward=+0.0  acum=7.0
+  Paso 33: nodo=C     batería= 57.0%  reward=+0.0  acum=7.0
+  Paso 34: nodo=C     batería= 58.0%  reward=+0.0  acum=7.0
+  Paso 35: nodo=C     batería= 59.0%  reward=+0.0  acum=7.0
+  Paso 36: nodo=C     batería= 60.0%  reward=+0.0  acum=7.0
+  Paso 37: nodo=C     batería= 61.0%  reward=+0.0  acum=7.0
+  Paso 38: nodo=C     batería= 62.0%  reward=+0.0  acum=7.0
+  Paso 39: nodo=C     batería= 63.0%  reward=+0.0  acum=7.0
+  Paso 40: nodo=C     batería= 63.0%  reward=+0.0  acum=7.0
+  Paso 41: nodo=C     batería= 64.0%  reward=+0.0  acum=7.0
+  Paso 42: nodo=C     batería= 65.0%  reward=+0.0  acum=7.0
+  Paso 43: nodo=C     batería= 65.0%  reward=+0.0  acum=7.0
+  Paso 44: nodo=C     batería= 66.0%  reward=+0.0  acum=7.0
+  Paso 45: nodo=C     batería= 67.0%  reward=+0.0  acum=7.0
+  Paso 46: nodo=C     batería= 68.0%  reward=+0.0  acum=7.0
+  Paso 47: nodo=C     batería= 69.0%  reward=+0.0  acum=7.0
+  Paso 48: nodo=C     batería= 69.0%  reward=+0.0  acum=7.0
+  Paso 49: nodo=C     batería= 70.0%  reward=+0.0  acum=7.0
+  Paso 50: nodo=C     batería= 71.0%  reward=+0.0  acum=7.0
+  -- Episodio completado (50 pasos)
+  Resumen: reward=7.0  pasos=50  habitaciones=2/3  cargas=3  depleted=NO
+
+--- Episodio 7/10 ---
+  Paso  1: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  2: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  3: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  4: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  5: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  6: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  7: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  8: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  9: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 10: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 11: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 12: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 13: nodo=Hab2  batería=100.0%  reward=+1.0  acum=1.0
+  Paso 14: nodo=C     batería=100.0%  reward=+0.0  acum=1.0
+  Paso 15: nodo=C     batería=100.0%  reward=+1.0  acum=2.0
+  Paso 16: nodo=Hab2  batería=100.0%  reward=+1.0  acum=3.0
+  Paso 17: nodo=C     batería=100.0%  reward=+0.0  acum=3.0
+  Paso 18: nodo=Hab3  batería=100.0%  reward=+1.0  acum=4.0
+  Paso 19: nodo=C     batería=100.0%  reward=+0.0  acum=4.0
+  Paso 20: nodo=Hab3  batería=100.0%  reward=+1.0  acum=5.0
+  Paso 21: nodo=Hab3  batería=100.0%  reward=+0.0  acum=5.0
+  Paso 22: nodo=Hab2  batería=100.0%  reward=+1.0  acum=6.0
+  Paso 23: nodo=Hab2  batería=100.0%  reward=+0.0  acum=6.0
+  Paso 24: nodo=Hab3  batería=100.0%  reward=+1.0  acum=7.0
+  Paso 25: nodo=Hab3  batería=100.0%  reward=+0.0  acum=7.0
+  Paso 26: nodo=Hab3  batería=100.0%  reward=+1.0  acum=8.0
+  Paso 27: nodo=C     batería=100.0%  reward=+0.0  acum=8.0
+  Paso 28: nodo=Hab3  batería=100.0%  reward=+1.0  acum=9.0
+  Paso 29: nodo=Hab3  batería=100.0%  reward=+0.0  acum=9.0
+  Paso 30: nodo=C     batería=100.0%  reward=+0.0  acum=9.0
+  Paso 31: nodo=Hab3  batería=100.0%  reward=+1.0  acum=10.0
+  Paso 32: nodo=Hab3  batería=100.0%  reward=+0.0  acum=10.0
+  Paso 33: nodo=Hab3  batería=100.0%  reward=+1.0  acum=11.0
+  Paso 34: nodo=C     batería=100.0%  reward=+0.0  acum=11.0
+  Paso 35: nodo=C     batería=100.0%  reward=+1.0  acum=12.0
+  Paso 36: nodo=C     batería=100.0%  reward=+0.0  acum=12.0
+  Paso 37: nodo=C     batería=100.0%  reward=+1.0  acum=13.0
+  Paso 38: nodo=C     batería=100.0%  reward=+0.0  acum=13.0
+  Paso 39: nodo=C     batería=100.0%  reward=+0.0  acum=13.0
+  Paso 40: nodo=C     batería=100.0%  reward=+1.0  acum=14.0
+  Paso 41: nodo=C     batería=100.0%  reward=+0.0  acum=14.0
+  Paso 42: nodo=C     batería=100.0%  reward=+0.0  acum=14.0
+  Paso 43: nodo=Hab3  batería=100.0%  reward=+1.0  acum=15.0
+  Paso 44: nodo=Hab3  batería=100.0%  reward=+0.0  acum=15.0
+  Paso 45: nodo=C     batería=100.0%  reward=+0.0  acum=15.0
+  Paso 46: nodo=C     batería=100.0%  reward=+0.0  acum=15.0
+  Paso 47: nodo=Hab3  batería=100.0%  reward=+1.0  acum=16.0
+  Paso 48: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 49: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 50: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  -- Episodio completado (50 pasos)
+  Resumen: reward=16.0  pasos=50  habitaciones=2/3  cargas=9  depleted=NO
+
+--- Episodio 8/10 ---
+  Paso  1: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  2: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  3: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  4: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  5: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  6: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  7: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  8: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  9: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 10: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 11: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 12: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 13: nodo=C     batería=100.0%  reward=+1.0  acum=1.0
+  Paso 14: nodo=Hab2  batería=100.0%  reward=+1.0  acum=2.0
+  Paso 15: nodo=C     batería=100.0%  reward=+0.0  acum=2.0
+  Paso 16: nodo=Hab2  batería=100.0%  reward=+1.0  acum=3.0
+  Paso 17: nodo=Hab2  batería=100.0%  reward=+0.0  acum=3.0
+  Paso 18: nodo=C     batería=100.0%  reward=+0.0  acum=3.0
+  Paso 19: nodo=Hab3  batería=100.0%  reward=+1.0  acum=4.0
+  Paso 20: nodo=Hab3  batería=100.0%  reward=+1.0  acum=5.0
+  Paso 21: nodo=C     batería=100.0%  reward=+0.0  acum=5.0
+  Paso 22: nodo=Hab2  batería=100.0%  reward=+1.0  acum=6.0
+  Paso 23: nodo=C     batería=100.0%  reward=+0.0  acum=6.0
+  Paso 24: nodo=Hab3  batería=100.0%  reward=+1.0  acum=7.0
+  Paso 25: nodo=C     batería=100.0%  reward=+0.0  acum=7.0
+  Paso 26: nodo=C     batería=100.0%  reward=+1.0  acum=8.0
+  Paso 27: nodo=Hab2  batería=100.0%  reward=+1.0  acum=9.0
+  Paso 28: nodo=C     batería=100.0%  reward=+0.0  acum=9.0
+  Paso 29: nodo=Hab3  batería=100.0%  reward=+1.0  acum=10.0
+  Paso 30: nodo=C     batería=100.0%  reward=+0.0  acum=10.0
+  Paso 31: nodo=C     batería=100.0%  reward=+1.0  acum=11.0
+  Paso 32: nodo=C     batería=100.0%  reward=+0.0  acum=11.0
+  Paso 33: nodo=Hab3  batería=100.0%  reward=+1.0  acum=12.0
+  Paso 34: nodo=Hab3  batería=100.0%  reward=+0.0  acum=12.0
+  Paso 35: nodo=C     batería=100.0%  reward=+0.0  acum=12.0
+  Paso 36: nodo=Hab3  batería=100.0%  reward=+1.0  acum=13.0
+  Paso 37: nodo=C     batería=100.0%  reward=+0.0  acum=13.0
+  Paso 38: nodo=Hab3  batería=100.0%  reward=+1.0  acum=14.0
+  Paso 39: nodo=Hab3  batería=100.0%  reward=+0.0  acum=14.0
+  Paso 40: nodo=C     batería=100.0%  reward=+0.0  acum=14.0
+  Paso 41: nodo=C     batería=100.0%  reward=+1.0  acum=15.0
+  Paso 42: nodo=C     batería=100.0%  reward=+0.0  acum=15.0
+  Paso 43: nodo=C     batería=100.0%  reward=+0.0  acum=15.0
+  Paso 44: nodo=Hab3  batería=100.0%  reward=+1.0  acum=16.0
+  Paso 45: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 46: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 47: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 48: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 49: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 50: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  -- Episodio completado (50 pasos)
+  Resumen: reward=16.0  pasos=50  habitaciones=2/3  cargas=12  depleted=NO
+
+--- Episodio 9/10 ---
+  Paso  1: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  2: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  3: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  4: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  5: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  6: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  7: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  8: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  9: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 10: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 11: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 12: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 13: nodo=Hab2  batería=100.0%  reward=+1.0  acum=1.0
+  Paso 14: nodo=C     batería=100.0%  reward=+0.0  acum=1.0
+  Paso 15: nodo=Hab2  batería=100.0%  reward=+1.0  acum=2.0
+  Paso 16: nodo=C     batería=100.0%  reward=+0.0  acum=2.0
+  Paso 17: nodo=Hab3  batería=100.0%  reward=+1.0  acum=3.0
+  Paso 18: nodo=Hab3  batería=100.0%  reward=+1.0  acum=4.0
+  Paso 19: nodo=Hab2  batería=100.0%  reward=+0.0  acum=4.0
+  Paso 20: nodo=C     batería=100.0%  reward=+0.0  acum=4.0
+  Paso 21: nodo=Hab3  batería=100.0%  reward=+1.0  acum=5.0
+  Paso 22: nodo=Hab3  batería=100.0%  reward=+1.0  acum=6.0
+  Paso 23: nodo=Hab2  batería=100.0%  reward=+0.0  acum=6.0
+  Paso 24: nodo=Hab3  batería=100.0%  reward=+1.0  acum=7.0
+  Paso 25: nodo=Hab3  batería=100.0%  reward=+0.0  acum=7.0
+  Paso 26: nodo=Hab3  batería=100.0%  reward=+1.0  acum=8.0
+  Paso 27: nodo=C     batería=100.0%  reward=+0.0  acum=8.0
+  Paso 28: nodo=Hab3  batería=100.0%  reward=+1.0  acum=9.0
+  Paso 29: nodo=C     batería=100.0%  reward=+0.0  acum=9.0
+  Paso 30: nodo=Hab3  batería=100.0%  reward=+1.0  acum=10.0
+  Paso 31: nodo=Hab3  batería=100.0%  reward=+0.0  acum=10.0
+  Paso 32: nodo=C     batería=100.0%  reward=+0.0  acum=10.0
+  Paso 33: nodo=Hab3  batería=100.0%  reward=+1.0  acum=11.0
+  Paso 34: nodo=Hab3  batería=100.0%  reward=+0.0  acum=11.0
+  Paso 35: nodo=C     batería=100.0%  reward=+0.0  acum=11.0
+  Paso 36: nodo=C     batería=100.0%  reward=+1.0  acum=12.0
+  Paso 37: nodo=Hab3  batería=100.0%  reward=+1.0  acum=13.0
+  Paso 38: nodo=C     batería=100.0%  reward=+0.0  acum=13.0
+  Paso 39: nodo=C     batería=100.0%  reward=+0.0  acum=13.0
+  Paso 40: nodo=Hab3  batería=100.0%  reward=+1.0  acum=14.0
+  Paso 41: nodo=C     batería=100.0%  reward=+0.0  acum=14.0
+  Paso 42: nodo=C     batería=100.0%  reward=+0.0  acum=14.0
+  Paso 43: nodo=Hab3  batería=100.0%  reward=+1.0  acum=15.0
+  Paso 44: nodo=C     batería=100.0%  reward=+0.0  acum=15.0
+  Paso 45: nodo=C     batería=100.0%  reward=+0.0  acum=15.0
+  Paso 46: nodo=C     batería=100.0%  reward=+0.0  acum=15.0
+  Paso 47: nodo=Hab3  batería=100.0%  reward=+1.0  acum=16.0
+  Paso 48: nodo=Hab3  batería=100.0%  reward=+0.0  acum=16.0
+  Paso 49: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 50: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  -- Episodio completado (50 pasos)
+  Resumen: reward=16.0  pasos=50  habitaciones=2/3  cargas=12  depleted=NO
+
+--- Episodio 10/10 ---
+  Paso  1: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  2: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  3: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  4: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  5: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  6: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  7: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  8: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso  9: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 10: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 11: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 12: nodo=C     batería=100.0%  reward=+0.0  acum=0.0
+  Paso 13: nodo=C     batería=100.0%  reward=+1.0  acum=1.0
+  Paso 14: nodo=Hab2  batería=100.0%  reward=+1.0  acum=2.0
+  Paso 15: nodo=C     batería=100.0%  reward=+0.0  acum=2.0
+  Paso 16: nodo=C     batería=100.0%  reward=+1.0  acum=3.0
+  Paso 17: nodo=Hab3  batería=100.0%  reward=+1.0  acum=4.0
+  Paso 18: nodo=Hab3  batería=100.0%  reward=+0.0  acum=4.0
+  Paso 19: nodo=C     batería=100.0%  reward=+0.0  acum=4.0
+  Paso 20: nodo=Hab3  batería=100.0%  reward=+1.0  acum=5.0
+  Paso 21: nodo=Hab3  batería=100.0%  reward=+0.0  acum=5.0
+  Paso 22: nodo=Hab2  batería=100.0%  reward=+1.0  acum=6.0
+  Paso 23: nodo=C     batería=100.0%  reward=+0.0  acum=6.0
+  Paso 24: nodo=Hab3  batería=100.0%  reward=+1.0  acum=7.0
+  Paso 25: nodo=Hab3  batería=100.0%  reward=+0.0  acum=7.0
+  Paso 26: nodo=C     batería=100.0%  reward=+1.0  acum=8.0
+  Paso 27: nodo=Hab3  batería=100.0%  reward=+1.0  acum=9.0
+  Paso 28: nodo=C     batería=100.0%  reward=+0.0  acum=9.0
+  Paso 29: nodo=Hab3  batería=100.0%  reward=+1.0  acum=10.0
+  Paso 30: nodo=C     batería=100.0%  reward=+0.0  acum=10.0
+  Paso 31: nodo=C     batería=100.0%  reward=+1.0  acum=11.0
+  Paso 32: nodo=C     batería=100.0%  reward=+0.0  acum=11.0
+  Paso 33: nodo=Hab3  batería=100.0%  reward=+1.0  acum=12.0
+  Paso 34: nodo=Hab3  batería=100.0%  reward=+0.0  acum=12.0
+  Paso 35: nodo=C     batería=100.0%  reward=+0.0  acum=12.0
+  Paso 36: nodo=Hab3  batería=100.0%  reward=+1.0  acum=13.0
+  Paso 37: nodo=Hab3  batería=100.0%  reward=+0.0  acum=13.0
+  Paso 38: nodo=C     batería=100.0%  reward=+0.0  acum=13.0
+  Paso 39: nodo=Hab3  batería=100.0%  reward=+1.0  acum=14.0
+  Paso 40: nodo=C     batería=100.0%  reward=+0.0  acum=14.0
+  Paso 41: nodo=C     batería=100.0%  reward=+1.0  acum=15.0
+  Paso 42: nodo=C     batería=100.0%  reward=+0.0  acum=15.0
+  Paso 43: nodo=C     batería=100.0%  reward=+0.0  acum=15.0
+  Paso 44: nodo=C     batería=100.0%  reward=+1.0  acum=16.0
+  Paso 45: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 46: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 47: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 48: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 49: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  Paso 50: nodo=C     batería=100.0%  reward=+0.0  acum=16.0
+  -- Episodio completado (50 pasos)
+  Resumen: reward=16.0  pasos=50  habitaciones=2/3  cargas=10  depleted=NO
+
+============================================================
+RESUMEN FINAL (10 episodios)
+============================================================
+Recompensa media:              15.10 ± 2.70
+Recompensa máxima:             16.00
+Recompensa mínima:             7.00
+Pasos medios por episodio:     50.0
+Habitaciones medias visitadas: 2.0 / 3
+Cargas voluntarias medias:     10.2
+Episodios con batería agotada: 0 / 10
+============================================================
+Evaluación completada.
+
+Cerrando CoppeliaSim...
+
+============================================
+TERMINADO
+============================================

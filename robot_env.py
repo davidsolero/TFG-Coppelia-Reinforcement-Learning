@@ -9,6 +9,7 @@ Observación:
     - visitas_hab1  : entero (veces visitada en el episodio)
     - visitas_hab2  : entero
     - visitas_hab3  : entero
+    - visitas_c     : entero
 
 Acciones (Discrete(4)):
     0 -> goTo:Hab1
@@ -46,6 +47,7 @@ NODE_TO_IDX = {
 }
 
 ROOM_NODES = ['Hab1', 'Hab2', 'Hab3']  # Nodos con recompensa de visita
+ALL_NODES = ['Hab1', 'Hab2', 'Hab3', 'C']  # Todos los nodos visitables
 
 
 class RobotCoppeliaSim:
@@ -118,10 +120,10 @@ class RobotEnv(gym.Env):
     def __init__(self, max_steps=50, trace=False):
         super().__init__()
 
-        # Espacio de observación: [nodo(0-3), bateria(0-100), vis1, vis2, vis3]
+        # Espacio de observación: [nodo(0-3), bateria(0-100), vis1, vis2, vis3, vis_c]
         self.observation_space = gym.spaces.Box(
-            low  = np.array([0,    0.0, 0, 0, 0], dtype=np.float32),
-            high = np.array([3, 100.0, 999, 999, 999], dtype=np.float32),
+            low  = np.array([0,    0.0, 0, 0, 0, 0], dtype=np.float32),
+            high = np.array([3, 100.0, 999, 999, 999, 999], dtype=np.float32),
             dtype = np.float32
         )
         print("Observation space: {}".format(self.observation_space))
@@ -138,7 +140,7 @@ class RobotEnv(gym.Env):
         self._numep             = -1
         self._numstepsinepisode = 0
         self._accreward         = 0.0
-        self._visit_counts      = {'Hab1': 0, 'Hab2': 0, 'Hab3': 0}
+        self._visit_counts      = {node: 0 for node in ALL_NODES}
 
         # Conexión con CoppeliaSim
         self._robot = RobotCoppeliaSim()
@@ -152,7 +154,7 @@ class RobotEnv(gym.Env):
         self._numep += 1
         self._numstepsinepisode = 0
         self._accreward = 0.0
-        self._visit_counts = {'Hab1': 0, 'Hab2': 0, 'Hab3': 0}
+        self._visit_counts = {node: 0 for node in ALL_NODES}
 
         self._robot.reset()
 
@@ -186,8 +188,10 @@ class RobotEnv(gym.Env):
             self._visit_counts[target_node] += 1
             media = np.mean(list(self._visit_counts.values()))
             visitas_antes = self._visit_counts[target_node] - 1
-            if visitas_antes < media - (1 / len(ROOM_NODES)):
+            if visitas_antes < media - (1 / len(ALL_NODES)):
                 reward = 1.0
+        else:
+            self._visit_counts[target_node] += 1
 
         self._accreward += reward
 
@@ -210,17 +214,11 @@ class RobotEnv(gym.Env):
         state = self._robot.get_state()
         node_idx = NODE_TO_IDX.get(state['node'], 3)
         battery  = float(state['battery'])
-        vis1     = float(self._visit_counts['Hab1'])
-        vis2     = float(self._visit_counts['Hab2'])
-        vis3     = float(self._visit_counts['Hab3'])
-        return np.array([node_idx, battery, vis1, vis2, vis3], dtype=np.float32)
+        vis = [float(self._visit_counts[node]) for node in ALL_NODES]
+        return np.array([node_idx, battery] + vis, dtype=np.float32)
 
     def _get_info(self):
-        """Información auxiliar para logging.
-        
-        IMPORTANTE: SB3 requiere que todos los valores sean floats o strings,
-        nunca None ni enteros puros, para evitar errores en ep_info_buffer.
-        """
+        """Información auxiliar para logging."""
         state = self._robot.get_state()
         return {
             'node':       state['node'],

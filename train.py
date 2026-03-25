@@ -16,10 +16,10 @@ from robot_env import RobotEnv
 
 # ── Parámetros ────────────────────────────────────────────────────────────────
 
-TOTAL_TIMESTEPS  = 100_000   # Pasos totales de entrenamiento
+TOTAL_TIMESTEPS  = 20_000   # Pasos totales de entrenamiento
 MAX_STEPS_EP     = 50       # Pasos máximos por episodio (truncation)
-LOG_DIR          = "./logs/" # Directorio para TensorBoard
-MODEL_PATH       = "./models/ppo_robot"  # Dónde guardar el modelo final
+LOG_DIR          = "./logs/Cmedia" # Directorio para TensorBoard
+MODEL_PATH       = "./models/ppo_robot_Cmedia"  # Dónde guardar el modelo final
 TRACE            = False    # True para ver logs paso a paso
 
 # ── Entorno ───────────────────────────────────────────────────────────────────
