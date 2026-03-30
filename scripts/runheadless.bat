@@ -5,14 +5,14 @@ echo ============================================
 
 echo.
 echo Iniciando CoppeliaSim headless...
-start "" "C:\Program Files\CoppeliaRobotics\CoppeliaSimEdu\coppeliaSim.exe" -h "C:\Users\usuario\Documents\GitHub\TFG-Coppelia-Reinforcement-Learning\entornoRobotVigilancia.ttt"
+start "" "C:\Program Files\CoppeliaRobotics\CoppeliaSimEdu\coppeliaSim.exe" -h "%~dp0..\entornoRobotVigilancia.ttt"
 
 echo Esperando 10 segundos a que CoppeliaSim cargue...
 timeout /t 10 /nobreak
 
 echo.
 echo Ejecutando entrenamiento...
-cd C:\Users\usuario\Documents\GitHub\TFG-Coppelia-Reinforcement-Learning
+cd /d "%~dp0.."
 python train.py
 
 echo.

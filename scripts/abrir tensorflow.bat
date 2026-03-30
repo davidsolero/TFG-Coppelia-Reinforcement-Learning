@@ -1,6 +1,6 @@
 @echo off
 echo Abriendo TensorBoard...
-cd C:\Users\usuario\Documents\GitHub\TFG-Coppelia-Reinforcement-Learning
+cd /d "%~dp0.."
 start "" "http://localhost:6006"
 python -m tensorboard.main --logdir ./logs/
 pause

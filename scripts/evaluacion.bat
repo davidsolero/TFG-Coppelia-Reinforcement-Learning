@@ -5,14 +5,14 @@ echo ============================================
 
 echo.
 echo Iniciando CoppeliaSim (con interfaz grafica)...
-start "" "C:\Program Files\CoppeliaRobotics\CoppeliaSimEdu\coppeliaSim.exe" "C:\Users\usuario\Documents\GitHub\TFG-Coppelia-Reinforcement-Learning\entornoRobotVigilancia.ttt"
+start "" "C:\Program Files\CoppeliaRobotics\CoppeliaSimEdu\coppeliaSim.exe" "%~dp0..\entornoRobotVigilancia.ttt"
 
 echo Esperando 15 segundos a que CoppeliaSim cargue...
 timeout /t 15 /nobreak
 
 echo.
 echo Ejecutando evaluacion...
-cd C:\Users\usuario\Documents\GitHub\TFG-Coppelia-Reinforcement-Learning
+cd /d "%~dp0.."
 python evaluate.py
 
 echo.
