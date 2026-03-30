@@ -12,28 +12,30 @@ Ver curvas de entrenamiento:
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_checker import check_env
 from robot_env import RobotEnv
+import os
 
+# ── Configuración de experimento ───────────────────────────────────────────────
+EXP_NAME = "exp_003_MediaHabsCconReward"  # Cambiar por nombre único de experimento
+BASE_DIR = f"./experiments/{EXP_NAME}"
+os.makedirs(f"{BASE_DIR}/model", exist_ok=True)
+os.makedirs(f"{BASE_DIR}/train_logs", exist_ok=True)
 
 # ── Parámetros ────────────────────────────────────────────────────────────────
-
 TOTAL_TIMESTEPS  = 20_000   # Pasos totales de entrenamiento
 MAX_STEPS_EP     = 50       # Pasos máximos por episodio (truncation)
-LOG_DIR          = "./logs/Cmedia" # Directorio para TensorBoard
-MODEL_PATH       = "./models/ppo_robot_Cmedia"  # Dónde guardar el modelo final
+LOG_DIR          = f"{BASE_DIR}/train_logs"  # Directorio para TensorBoard
+MODEL_PATH       = f"{BASE_DIR}/model/ppo_robot"  # Dónde guardar el modelo final
 TRACE            = False    # True para ver logs paso a paso
 
 # ── Entorno ───────────────────────────────────────────────────────────────────
-
 print("Creando entorno...")
 env = RobotEnv(max_steps=MAX_STEPS_EP, trace=TRACE)
 
 # Verificación automática de compatibilidad con Gymnasium/SB3
-# Comenta esta línea si ralentiza el arranque
 print("Verificando entorno...")
 check_env(env, warn=True)
 
 # ── Modelo PPO ────────────────────────────────────────────────────────────────
-
 print("Creando modelo PPO...")
 model = PPO(
     policy          = "MlpPolicy",  # Red neuronal densa (Multi-Layer Perceptron)
@@ -46,7 +48,6 @@ print(f"\nIniciando entrenamiento ({TOTAL_TIMESTEPS} pasos)...")
 print(f"Para ver curvas: tensorboard --logdir {LOG_DIR}\n")
 
 # ── Entrenamiento ─────────────────────────────────────────────────────────────
-
 model.learn(
     total_timesteps    = TOTAL_TIMESTEPS,
     tb_log_name        = "PPO_robot",   # Nombre de la run en TensorBoard
@@ -54,13 +55,9 @@ model.learn(
 )
 
 # ── Guardar modelo ────────────────────────────────────────────────────────────
-
-import os
-os.makedirs("./models", exist_ok=True)
 model.save(MODEL_PATH)
 print(f"\nModelo guardado en: {MODEL_PATH}")
 
 # ── Cierre limpio ─────────────────────────────────────────────────────────────
-
 env.close()
 print("Entrenamiento completado.")

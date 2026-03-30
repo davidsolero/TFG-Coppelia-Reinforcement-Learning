@@ -21,7 +21,7 @@ import numpy as np
 
 # ── Parámetros ────────────────────────────────────────────────────────────────
 
-MODEL_PATH = "./models/ppo_robot_Cmedia"
+MODEL_PATH = "./models/ppo_robot"
 NUM_EPISODES = 10
 MAX_STEPS    = 50
 

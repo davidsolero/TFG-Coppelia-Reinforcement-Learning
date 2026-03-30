@@ -184,7 +184,7 @@ class RobotEnv(gym.Env):
         if final_state['depleted']:
             reward     = -10.0
             terminated = True
-        elif target_node in ROOM_NODES:
+        elif target_node in ROOM_NODES + ['C']:
             self._visit_counts[target_node] += 1
             media = np.mean(list(self._visit_counts.values()))
             visitas_antes = self._visit_counts[target_node] - 1
