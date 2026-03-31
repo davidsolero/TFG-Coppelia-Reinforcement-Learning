@@ -1,0 +1,34 @@
+Conectando a CoppeliaSim...
+Observation space: Box(0.0, [  3. 100. 999. 999. 999. 999.], (6,), float32)
+Action space: Discrete(4)
+Cargando modelo: ./experiments/exp_003_MediaHabsCconReward/model/ppo_robot.zip
+Wrapping the env with a `Monitor` wrapper
+Wrapping the env in a DummyVecEnv.
+
+Evaluando 500 episodios...
+
+ ~ Tiempo estimado restante: 242.4 min
+ ~ Tiempo estimado restante: 214.8 min
+ ~ Tiempo estimado restante: 188.2 min
+ ~ Tiempo estimado restante: 162.2 min
+ ~ Tiempo estimado restante: 134.7 min
+ ~ Tiempo estimado restante: 106.7 min
+ ~ Tiempo estimado restante: 79.7 min
+ ~ Tiempo estimado restante: 52.9 min
+ ~ Tiempo estimado restante: 26.4 min
+ ~ Tiempo estimado restante: 0.0 min
+
+============================================================
+RESUMEN GLOBAL
+============================================================
+Reward medio:              25.56 ± 1.21
+Habitaciones medias:       3.00 / 3
+Full coverage rate:        100.0%
+Tiempo medio en C:         49.0%
+Batería mínima media:      98.2%
+Cargas medias:             14.86
+Episodios con batería 0:   0/500
+
+Resultados guardados en ./experiments/exp_003_MediaHabsCconReward/deep_evaluation/results.csv
+
+Evaluación completada.

@@ -23,9 +23,9 @@ import time
 import os
 
 # ── Configuración de experimento ───────────────────────────────────────────────
-EXP_NAME = "exp_001_Cmedia"  # Debe coincidir con train.py
+EXP_NAME = "exp_003_MediaHabsCconReward"  # Debe coincidir con train.py
 BASE_DIR = f"./experiments/{EXP_NAME}"
-os.makedirs(f"{BASE_DIR}/eval", exist_ok=True)
+os.makedirs(f"{BASE_DIR}/deep_evaluation", exist_ok=True)
 
 # ── Parámetros ────────────────────────────────────────────────────────────────
 MODEL_PATH   = f"{BASE_DIR}/model/ppo_robot"
@@ -140,8 +140,8 @@ df = pd.DataFrame({
     "time_in_C": all_time_in_C,
     "min_battery": all_min_battery
 })
-df.to_csv(f"{BASE_DIR}/eval/results.csv", index=False)
-print(f"\nResultados guardados en {BASE_DIR}/eval/results.csv")
+df.to_csv(f"{BASE_DIR}/deep_evaluation/results.csv", index=False)
+print(f"\nResultados guardados en {BASE_DIR}/deep_evaluation/results.csv")
 
 # ── Gráficas ────────────────────────────────────────────────────────────────
 plt.figure()

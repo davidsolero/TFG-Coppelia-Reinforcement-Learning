@@ -18,10 +18,15 @@ Métricas reportadas por episodio:
 from stable_baselines3 import PPO
 from robot_env import RobotEnv
 import numpy as np
+from pathlib import Path
+
+# ── Configuración de experimento ──────────────────────────────────────────────
+EXP_NAME = "exp_003_MediaHabsCconReward"  # Debe coincidir con train.py
+PROJECT_DIR = Path(__file__).resolve().parent
+BASE_DIR = PROJECT_DIR / "experiments" / EXP_NAME
 
 # ── Parámetros ────────────────────────────────────────────────────────────────
-
-MODEL_PATH = "./models/ppo_robot"
+MODEL_PATH = BASE_DIR / "model" / "ppo_robot"
 NUM_EPISODES = 10
 MAX_STEPS    = 50
 
@@ -30,8 +35,17 @@ MAX_STEPS    = 50
 print("Conectando a CoppeliaSim...")
 env = RobotEnv(max_steps=MAX_STEPS, trace=False)
 
-print(f"Cargando modelo: {MODEL_PATH}.zip")
-model = PPO.load(MODEL_PATH, env=env)
+model_zip = MODEL_PATH.with_suffix(".zip")
+print(f"Cargando modelo: {model_zip}")
+
+if not model_zip.exists():
+    env.close()
+    raise FileNotFoundError(
+        f"No se encontro el modelo en: {model_zip}\n"
+        "Verifica que el entrenamiento haya generado ppo_robot.zip en la carpeta esperada."
+    )
+
+model = PPO.load(str(MODEL_PATH), env=env)
 
 # ── Evaluación ────────────────────────────────────────────────────────────────
 
