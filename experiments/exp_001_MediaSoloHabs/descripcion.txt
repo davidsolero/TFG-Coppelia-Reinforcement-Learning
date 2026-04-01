@@ -1,0 +1,7 @@
+exp_001_MediaSoloHabs
+----------------------------------------
+- Recompensa +1 basada en la media de visitas de las habitaciones (Hab1, Hab2, Hab3) únicamente.
+- No se considera la habitación de recarga (C) para la media.
+- Sin penalización por ir a C.
+- Penalización -10 por quedarse sin batería y fin de episodio.
+- Resultado obtenido: el robot tiende a ir a C con casi siempre y puede no optimizar visitas a otras habitaciones.

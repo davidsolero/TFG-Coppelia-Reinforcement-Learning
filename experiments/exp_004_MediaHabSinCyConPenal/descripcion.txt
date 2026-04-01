@@ -1,0 +1,5 @@
+exp_004_MediaHabSinCyConPenal
+----------------------------------------
+- Recompensa +1 basada en la media de solo las habitaciones principales (Hab1, Hab2, Hab3), como exp_001.
+- Penalización -0.1 por ir a C y -10 por quedarse sin batería (fin de episodio).
+- Resultado esperado: el robot mantiene visitas equilibradas a las habitaciones y solo va a C cuando es necesario para recargar.

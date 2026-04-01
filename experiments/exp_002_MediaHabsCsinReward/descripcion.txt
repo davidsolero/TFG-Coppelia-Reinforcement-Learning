@@ -1,0 +1,6 @@
+exp_002_MediaHabsCsinReward
+----------------------------------------
+- Recompensa +1 basada en la media de todas las habitaciones (Hab1, Hab2, Hab3 y C).
+- Ir a C no aporta +1 recompensa.
+- Penalización -10 por quedarse sin batería y fin de episodio.
+- Resultado obtenido: el robot puede priorizar ir a C más de lo necesario, reduciendo la frecuencia de visitas a las habitaciones principales.
