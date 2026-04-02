@@ -15,7 +15,7 @@ from robot_env import RobotEnv
 import os
 
 # ── Configuración de experimento ───────────────────────────────────────────────
-EXP_NAME = "exp_003_MediaHabsCconReward"  # Cambiar por nombre único de experimento
+EXP_NAME = "exp_001_MediaSoloHabsRemakeobs"  # Cambiar por nombre único de experimento
 BASE_DIR = f"./experiments/{EXP_NAME}"
 os.makedirs(f"{BASE_DIR}/model", exist_ok=True)
 os.makedirs(f"{BASE_DIR}/train_logs", exist_ok=True)

@@ -1,7 +1,7 @@
 Conectando a CoppeliaSim...
 Observation space: Box(0.0, [  3. 100. 999. 999. 999. 999.], (6,), float32)
 Action space: Discrete(4)
-Cargando modelo: ./models/ppo_robot_Cmedia.zip
+Cargando modelo: ./models/ppo_robot_CmediaSinReward.zip
 Wrapping the env with a `Monitor` wrapper
 Wrapping the env in a DummyVecEnv.
 

@@ -184,14 +184,17 @@ class RobotEnv(gym.Env):
         if final_state['depleted']:
             reward     = -10.0
             terminated = True
-        elif target_node in ROOM_NODES + ['C']:
+        elif target_node in ROOM_NODES:
+            # incrementamos visitas
             self._visit_counts[target_node] += 1
-            media = np.mean(list(self._visit_counts.values()))
+            # media SOLO de habitaciones
+            media = np.mean([self._visit_counts[r] for r in ROOM_NODES])
             visitas_antes = self._visit_counts[target_node] - 1
-            if visitas_antes < media - (1 / len(ALL_NODES)):
+            if visitas_antes < media - (1 / len(ROOM_NODES)):
                 reward = 1.0
-        else:
-            self._visit_counts[target_node] += 1
+        elif target_node == 'C':
+            self._visit_counts['C'] += 1
+            reward = 0.0  # Sin penalización por ir a recarga (exp_001)
 
         self._accreward += reward
 
