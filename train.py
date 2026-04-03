@@ -15,13 +15,16 @@ from robot_env import RobotEnv
 import os
 
 # ── Configuración de experimento ───────────────────────────────────────────────
-EXP_NAME = "exp_001_MediaSoloHabsRemakeobs"  # Cambiar por nombre único de experimento
+EXP_NAME = "exp_005_MediaHabSinCyConPenalAdaptativa"  # Cambiar por nombre único de experimento
 BASE_DIR = f"./experiments/{EXP_NAME}"
 os.makedirs(f"{BASE_DIR}/model", exist_ok=True)
 os.makedirs(f"{BASE_DIR}/train_logs", exist_ok=True)
 
+# Si existe un modelo previo, se reanuda el entrenamiento en lugar de empezar de cero.
+RESUME_TRAINING = True
+
 # ── Parámetros ────────────────────────────────────────────────────────────────
-TOTAL_TIMESTEPS  = 20_000   # Pasos totales de entrenamiento
+TOTAL_TIMESTEPS  = 20_000   # Pasos de entrenamiento
 MAX_STEPS_EP     = 50       # Pasos máximos por episodio (truncation)
 LOG_DIR          = f"{BASE_DIR}/train_logs"  # Directorio para TensorBoard
 MODEL_PATH       = f"{BASE_DIR}/model/ppo_robot"  # Dónde guardar el modelo final
@@ -36,13 +39,20 @@ print("Verificando entorno...")
 check_env(env, warn=True)
 
 # ── Modelo PPO ────────────────────────────────────────────────────────────────
-print("Creando modelo PPO...")
-model = PPO(
-    policy          = "MlpPolicy",  # Red neuronal densa (Multi-Layer Perceptron)
-    env             = env,
-    verbose         = 1,            # Imprime progreso cada pocos episodios
-    tensorboard_log = LOG_DIR,
-)
+model_zip_path = f"{MODEL_PATH}.zip"
+
+if RESUME_TRAINING and os.path.exists(model_zip_path):
+    print(f"Cargando modelo existente: {model_zip_path}")
+    model = PPO.load(MODEL_PATH, env=env)
+    model.tensorboard_log = LOG_DIR
+else:
+    print("Creando modelo PPO...")
+    model = PPO(
+        policy          = "MlpPolicy",  # Red neuronal densa (Multi-Layer Perceptron)
+        env             = env,
+        verbose         = 1,            # Imprime progreso cada pocos episodios
+        tensorboard_log = LOG_DIR,
+    )
 
 print(f"\nIniciando entrenamiento ({TOTAL_TIMESTEPS} pasos)...")
 print(f"Para ver curvas: tensorboard --logdir {LOG_DIR}\n")
@@ -52,6 +62,7 @@ model.learn(
     total_timesteps    = TOTAL_TIMESTEPS,
     tb_log_name        = "PPO_robot",   # Nombre de la run en TensorBoard
     progress_bar       = True,
+    reset_num_timesteps = not RESUME_TRAINING,
 )
 
 # ── Guardar modelo ────────────────────────────────────────────────────────────

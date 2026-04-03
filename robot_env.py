@@ -49,6 +49,11 @@ NODE_TO_IDX = {
 ROOM_NODES = ['Hab1', 'Hab2', 'Hab3']  # Nodos con recompensa de visita
 ALL_NODES = ['Hab1', 'Hab2', 'Hab3', 'C']  # Todos los nodos visitables
 
+# Penalización adaptativa por ir a C (exp_05)
+C_PENALTY_HIGH_BAT = -0.4   # batería > 70%
+C_PENALTY_MID_BAT  = -0.2   # 40% < batería <= 70%
+C_PENALTY_LOW_BAT  = -0.05  # batería <= 40%
+
 
 class RobotCoppeliaSim:
     """
@@ -194,7 +199,15 @@ class RobotEnv(gym.Env):
                 reward = 1.0
         elif target_node == 'C':
             self._visit_counts['C'] += 1
-            reward = 0.0  # Sin penalización por ir a recarga (exp_001)
+
+            # Penalización adaptativa por ir a C según batería actual.
+            battery = float(final_state['battery'])
+            if battery > 70.0:
+                reward = C_PENALTY_HIGH_BAT
+            elif battery > 40.0:
+                reward = C_PENALTY_MID_BAT
+            else:
+                reward = C_PENALTY_LOW_BAT
 
         self._accreward += reward
 

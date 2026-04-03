@@ -1,0 +1,34 @@
+Conectando a CoppeliaSim...
+Observation space: Box(0.0, [  3. 100. 999. 999. 999. 999.], (6,), float32)
+Action space: Discrete(4)
+Cargando modelo: ./experiments/exp_005_MediaHabSinCyConPenalAdaptativa/model/ppo_robot.zip
+Wrapping the env with a `Monitor` wrapper
+Wrapping the env in a DummyVecEnv.
+
+Evaluando 500 episodios...
+
+ ~ Tiempo estimado restante: 249.6 min
+ ~ Tiempo estimado restante: 220.9 min
+ ~ Tiempo estimado restante: 191.7 min
+ ~ Tiempo estimado restante: 162.1 min
+ ~ Tiempo estimado restante: 133.9 min
+ ~ Tiempo estimado restante: 107.2 min
+ ~ Tiempo estimado restante: 80.4 min
+ ~ Tiempo estimado restante: 54.4 min
+ ~ Tiempo estimado restante: 27.2 min
+ ~ Tiempo estimado restante: -0.0 min
+
+============================================================
+RESUMEN GLOBAL
+============================================================
+Reward medio:              18.42 ± 1.27
+Habitaciones medias:       3.00 / 3
+Full coverage rate:        100.0%
+Tiempo medio en C:         29.1%
+Batería mínima media:      47.4%
+Cargas medias:             9.78
+Episodios con batería 0:   0/500
+
+Resultados guardados en ./experiments/exp_005_MediaHabSinCyConPenalAdaptativa/deep_evaluation/deepevaluation_results.csv
+
+Evaluación completada.

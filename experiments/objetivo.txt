@@ -1,0 +1,27 @@
+Objetivo de evaluacion para los experimentos del robot de vigilancia
+-------------------------------------------------------------------
+
+La politica se considera mejor si, en evaluacion determinista:
+- Mantiene full coverage del 100% de forma estable.
+- No agota la bateria en 0 episodios.
+- Reduce el tiempo en C sin poner en riesgo la autonomia.
+- Mantiene una patrulla equilibrada entre Hab1, Hab2 y Hab3.
+- Consigue una cobertura completa en pocos pasos.
+- Mantiene reward por paso estable y positivo.
+
+Metricas deseadas para deep evaluation:
+- full_coverage_rate: 100%
+- battery_depletions: 0/500
+- time_in_C: bajo y estable, sin subir las cargas innecesarias
+- time_out_C: alto, como complemento de un menor tiempo en C
+- full_coverage_step: bajo en media y con poca dispersion
+- room_std y room_spread: bajos, para reflejar patrulla balanceada
+- reward_per_step: alto y estable
+- p10/p50/p90 de reward, time_in_C y min_battery con poca dispersion
+
+Criterio practico para parar la linea primitiva:
+- Si una nueva variante no mejora de forma clara el balance de habitaciones,
+  no reduce el tiempo en C, o empeora la seguridad energetica, no merece
+  seguir endureciendo penalizaciones.
+- Cuando full coverage ya es 100% y la bateria no se agota, el siguiente paso
+  debe ser medir eficiencia y balance, no castigar mas por defecto.

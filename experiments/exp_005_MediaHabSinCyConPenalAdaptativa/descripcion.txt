@@ -1,0 +1,12 @@
+exp_005_MediaHabSinCyConPenalAdaptativa
+----------------------------------------
+- Recompensa +1 basada en la media de solo las habitaciones principales (Hab1, Hab2, Hab3), como exp_004.
+- Ir a C tiene penalización adaptativa según batería:
+  - Batería > 70%: penalización -0.4.
+  - 40% < batería <= 70%: penalización -0.2.
+  - Batería <= 40%: penalización -0.05.
+- Penalización -10 por quedarse sin batería y fin de episodio.
+- Entreno: a los 20000 la curva no terminaba de converger asi que entrene otros 20000 hasta aplanarse.
+- Resultado esperado: reducir visitas innecesarias a C, mantener el full coverage en habitaciones y conservar seguridad energética.
+
+
