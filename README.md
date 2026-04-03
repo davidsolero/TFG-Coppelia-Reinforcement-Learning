@@ -199,7 +199,7 @@ Caracteristicas:
 - 500 episodios por defecto (ajustable).
 - Calcula metricas agregadas robustas.
 - Exporta CSV a:
-	- `experiments/<EXP_NAME>/deep_evaluation/deepevaluation_results.csv`
+	- `experiments/<EXP_NAME>/deep_evaluation/deepevaluation_resultsv2.csv`
 - Muestra histogramas y boxplot al finalizar.
 
 Automatizado en headless:
