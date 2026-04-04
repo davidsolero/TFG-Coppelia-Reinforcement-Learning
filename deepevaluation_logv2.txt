@@ -1,9 +1,0 @@
-Conectando a CoppeliaSim...
-Observation space: Box(0.0, [  3. 100. 999. 999. 999. 999.], (6,), float32)
-Action space: Discrete(4)
-Cargando modelo: ./experiments/exp_005_MediaHabSinCyConPenalAdaptativa/model/ppo_robot.zip
-Wrapping the env with a `Monitor` wrapper
-Wrapping the env in a DummyVecEnv.
-
-Evaluando 500 episodios...
-
