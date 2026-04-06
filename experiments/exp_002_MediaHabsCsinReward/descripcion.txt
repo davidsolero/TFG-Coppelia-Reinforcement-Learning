@@ -4,3 +4,25 @@ exp_002_MediaHabsCsinReward
 - Ir a C no aporta +1 recompensa.
 - Penalización -10 por quedarse sin batería y fin de episodio.
 - Resultado obtenido: el robot puede priorizar ir a C más de lo necesario, reduciendo la frecuencia de visitas a las habitaciones principales.
+
+Calculo de recompensa (if, bloque sustituible)
+----------------------------------------
+reward = 0.0
+
+if final_state['depleted']:
+	reward = -10.0
+	terminated = True
+elif target_node in ['Hab1', 'Hab2', 'Hab3']:
+	self._visit_counts[target_node] += 1
+	media = np.mean([
+		self._visit_counts['Hab1'],
+		self._visit_counts['Hab2'],
+		self._visit_counts['Hab3'],
+		self._visit_counts['C'],
+	])
+	visitas_antes = self._visit_counts[target_node] - 1
+	if visitas_antes < media - (1 / 4):
+		reward = 1.0
+elif target_node == 'C':
+	self._visit_counts['C'] += 1
+	reward = 0.0

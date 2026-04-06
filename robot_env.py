@@ -197,6 +197,8 @@ class RobotEnv(gym.Env):
             visitas_antes = self._visit_counts[target_node] - 1
             if visitas_antes < media - (1 / len(ROOM_NODES)):
                 reward = 1.0
+            elif visitas_antes > media + 1.0:
+                reward = -0.2
         elif target_node == 'C':
             self._visit_counts['C'] += 1
 

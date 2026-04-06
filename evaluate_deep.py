@@ -37,7 +37,7 @@ def percentiles(values):
     return np.percentile(array, [10, 50, 90])
 
 # ── Configuración de experimento ───────────────────────────────────────────────
-EXP_NAME = "exp_005_MediaHabSinCyConPenalAdaptativa"  # Debe coincidir con train.py
+EXP_NAME = "exp_006_MediaHabSinCyConPenalAdaptativaBalance"  # Debe coincidir con train.py
 BASE_DIR = f"./experiments/{EXP_NAME}"
 os.makedirs(f"{BASE_DIR}/deep_evaluation", exist_ok=True)
 PLOTS_DIR = f"{BASE_DIR}/deep_evaluation/plotsv2"
@@ -230,6 +230,29 @@ plt.figure()
 plt.hist(all_room_std, bins=20)
 plt.title("Desbalance entre habitaciones (std)")
 plt.savefig(os.path.join(PLOTS_DIR, "hist_room_std.png"), dpi=150, bbox_inches="tight")
+
+plt.figure()
+room_labels = ["Hab1", "Hab2", "Hab3"]
+room_means = [
+    float(np.mean(all_room1_counts)),
+    float(np.mean(all_room2_counts)),
+    float(np.mean(all_room3_counts)),
+]
+dominant_idx = int(np.argmax(room_means))
+colors = ["#4C78A8", "#F58518", "#54A24B"]
+colors[dominant_idx] = "#E45756"
+bars = plt.bar(room_labels, room_means, color=colors)
+for idx, bar in enumerate(bars):
+    plt.text(
+        bar.get_x() + bar.get_width() / 2.0,
+        bar.get_height() + 0.05,
+        f"{room_means[idx]:.2f}",
+        ha="center",
+        va="bottom",
+    )
+plt.title(f"Balance entre habitaciones (mas visitada: {room_labels[dominant_idx]})")
+plt.ylabel("Visitas medias por episodio")
+plt.savefig(os.path.join(PLOTS_DIR, "balance_habs.png"), dpi=150, bbox_inches="tight")
 
 plt.figure()
 plt.hist(all_reward_per_step, bins=20)
