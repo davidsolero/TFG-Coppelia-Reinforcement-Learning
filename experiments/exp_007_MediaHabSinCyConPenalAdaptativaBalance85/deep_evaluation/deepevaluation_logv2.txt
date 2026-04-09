@@ -1,0 +1,46 @@
+Conectando a CoppeliaSim...
+Observation space: Box(0.0, [  3. 100. 999. 999. 999. 999.], (6,), float32)
+Action space: Discrete(4)
+Cargando modelo: ./experiments/exp_007_MediaHabSinCyConPenalAdaptativaBalance85/model/ppo_robot.zip
+Wrapping the env with a `Monitor` wrapper
+Wrapping the env in a DummyVecEnv.
+
+Evaluando 500 episodios...
+
+ ~ Tiempo estimado restante: 252.9 min
+ ~ Tiempo estimado restante: 230.0 min
+ ~ Tiempo estimado restante: 203.7 min
+ ~ Tiempo estimado restante: 179.1 min
+ ~ Tiempo estimado restante: 150.5 min
+ ~ Tiempo estimado restante: 121.5 min
+ ~ Tiempo estimado restante: 92.1 min
+ ~ Tiempo estimado restante: 61.7 min
+ ~ Tiempo estimado restante: 31.0 min
+ ~ Tiempo estimado restante: 0.0 min
+
+============================================================
+RESUMEN GLOBAL
+============================================================
+Reward medio:              15.81 ± 2.27
+Reward p10/p50/p90:        11.24 / 16.80 / 16.80
+Reward por paso medio:     0.316 ± 0.045
+Reward/step p10/p50/p90:   0.225 / 0.336 / 0.336
+Habitaciones medias:       3.00 / 3
+Full coverage rate:        100.0%
+Paso medio de cobertura:   4.3
+Cobertura p10/p50/p90:     3.0 / 3.0 / 7.0
+Tiempo medio en C:         28.8%
+Tiempo en C p10/p50/p90:   22.0% / 26.0% / 50.0%
+Tiempo fuera de C medio:   71.2%
+Tiempo fuera de C p10/p50/p90: 50.0% / 74.0% / 78.0%
+Batería mínima media:      90.2%
+Batería mínima p10/p50/p90: 32.0% / 100.0% / 100.0%
+Cargas medias:             10.47
+Hab1/Hab2/Hab3 medias:     11.48 / 12.75 / 11.36
+Desbalance medio (std):    1.48
+Desbalance medio (max-min): 3.43
+Episodios con batería 0:   0/500
+
+Resultados guardados en ./experiments/exp_007_MediaHabSinCyConPenalAdaptativaBalance85/deep_evaluation/deepevaluation_resultsv2.csv
+
+Evaluación completada.

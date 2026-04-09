@@ -19,6 +19,36 @@ Metricas deseadas para deep evaluation:
 - reward_per_step: alto y estable
 - p10/p50/p90 de reward, time_in_C y min_battery con poca dispersion
 
+Criterio numerico de "objetivo cumplido" (deep evaluation de 500 episodios):
+-------------------------------------------------------------------------
+
+Bloque A (requisitos obligatorios):
+- full_coverage_rate = 100%
+- battery_depletions = 0/500
+
+Bloque B (eficiencia y estabilidad; todos deben cumplirse):
+- time_in_C_mean <= 0.28
+- time_in_C_p90 <= 0.32
+- time_out_C_mean >= 0.72
+- charges_mean <= 12.5
+- full_coverage_step_mean <= 6.0
+- full_coverage_step_p90 <= 10.0
+- reward_per_step_mean >= 0.37
+- reward_per_step_std <= 0.02
+- reward_per_step_p10 >= 0.36
+- (reward_per_step_p90 - reward_per_step_p10) <= 0.05
+
+Bloque C (balance y seguridad energetica; todos deben cumplirse):
+- room_std_mean <= 1.30
+- room_std_p90 <= 2.50
+- room_spread_mean <= 3.0
+- room_spread_p90 <= 6.0
+- min_battery_p10 >= 30%
+
+Regla final de decision:
+- Objetivo cumplido = Bloque A + Bloque B + Bloque C completos.
+- Si falla cualquier metrica obligatoria o de bloque, objetivo no cumplido.
+
 Criterio practico para parar la linea primitiva:
 - Si una nueva variante no mejora de forma clara el balance de habitaciones,
   no reduce el tiempo en C, o empeora la seguridad energetica, no merece
