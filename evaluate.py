@@ -33,7 +33,7 @@ def safe_ratio(numerator, denominator):
     return float(numerator) / float(denominator) if denominator else 0.0
 
 # ── Configuración de experimento ──────────────────────────────────────────────
-EXP_NAME = "exp_007_MediaHabSinCyConPenalAdaptativaBalance85"  # Debe coincidir con train.py
+EXP_NAME = "exp_008_MediaHabSinCyConPenalFija"  # Debe coincidir con train.py
 PROJECT_DIR = Path(__file__).resolve().parent
 BASE_DIR = PROJECT_DIR / "experiments" / EXP_NAME
 

@@ -1,0 +1,12 @@
+exp_008_MediaHabSinCyConPenalFija
+---------------------------------
+- Base: misma configuración que exp_007 (recompensa por media de habitaciones + penalización por sobrerrepresentación de habitación).
+- Cambio principal: remover la penalización adaptativa a batería en C, usando una penalización fija.
+  - C recibe penalización constante: reward = -0.2
+- Se mantiene penalización -10 por batería agotada y fin de episodio.
+- Objetivo: verificar si el robot puede aprender a recargar de forma óptima sin información explícita del nivel de batería, removiendo el sesgo de "cuanta más batería, peor recargar".
+
+Calculo de recompensa para C (step)
+-----------------------------------
+elif target_node == 'C':
+    reward = -0.2
