@@ -1,0 +1,41 @@
+Guardando log en: ./experiments/exp_003_MediaHabsCconReward/deep_evaluation/deepevaluation_logv3.txt
+Conectando a CoppeliaSim...
+Observation space: Box(0.0, [  3. 100. 999. 999. 999. 999.], (6,), float32)
+Action space: Discrete(4)
+Cargando modelo: ./experiments/exp_003_MediaHabsCconReward/model/ppo_robot.zip
+Wrapping the env with a `Monitor` wrapper
+Wrapping the env in a DummyVecEnv.
+
+Evaluando 500 episodios...
+
+Episodios evaluados: 0/500 (inicio)
+Episodios evaluados: 500/500 (fin)
+
+
+============================================================
+RESUMEN GLOBAL
+============================================================
+Reward medio:              25.72 ± 0.96
+Reward p10/p50/p90:        25.00 / 26.00 / 26.00
+Reward por paso medio:     0.514 ± 0.019
+Reward/step p10/p50/p90:   0.500 / 0.520 / 0.520
+Habitaciones medias:       3.00 / 3
+Full coverage rate:        100.0%
+Paso medio de cobertura:   14.1
+Cobertura p10/p50/p90:     13.0 / 13.0 / 18.0
+Tiempo medio en C:         48.4%
+Tiempo en C p10/p50/p90:   44.0% / 48.0% / 52.0%
+Tiempo fuera de C medio:   51.6%
+Tiempo fuera de C p10/p50/p90: 48.0% / 52.0% / 56.0%
+Batería mínima media:      99.1%
+Batería mínima p10/p50/p90: 100.0% / 100.0% / 100.0%
+Cargas medias:             16.25
+Hab1/Hab2/Hab3 medias:     7.90 / 6.84 / 11.06
+Desbalance medio (std):    1.97
+Desbalance medio (max-min): 4.58
+Episodios con batería 0:   0/500
+Batería media al recargar: 99.8%
+
+Resultados guardados en ./experiments/exp_003_MediaHabsCconReward/deep_evaluation/deepevaluation_resultsv3.csv
+
+Evaluación completada.

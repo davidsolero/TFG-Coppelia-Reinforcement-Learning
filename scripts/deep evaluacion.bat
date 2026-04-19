@@ -24,7 +24,7 @@ echo ============================================
 
 cd /d %PROJECT_PATH%
 
-python evaluate_deep.py > deepevaluation_logv2.txt
+python evaluate_deep.py
 
 echo.
 echo ============================================
@@ -37,8 +37,9 @@ taskkill /IM coppeliaSim.exe /F >nul 2>&1
 
 echo.
 echo Archivos generados:
-echo - deepevaluation_resultsv2.csv
-echo - deepevaluation_logv2.txt
+echo - experiments\[exp]\deep_evaluation\deepevaluation_resultsv3.csv
+echo - experiments\[exp]\deep_evaluation\deepevaluation_logv3.txt
+echo - experiments\[exp]\deep_evaluation\plotsv3\*.png
 
 echo.
 pause

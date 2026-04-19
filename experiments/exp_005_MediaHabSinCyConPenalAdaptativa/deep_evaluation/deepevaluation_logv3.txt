@@ -1,0 +1,41 @@
+Guardando log en: ./experiments/exp_005_MediaHabSinCyConPenalAdaptativa/deep_evaluation/deepevaluation_logv3.txt
+Conectando a CoppeliaSim...
+Observation space: Box(0.0, [  3. 100. 999. 999. 999. 999.], (6,), float32)
+Action space: Discrete(4)
+Cargando modelo: ./experiments/exp_005_MediaHabSinCyConPenalAdaptativa/model/ppo_robot.zip
+Wrapping the env with a `Monitor` wrapper
+Wrapping the env in a DummyVecEnv.
+
+Evaluando 500 episodios...
+
+Episodios evaluados: 0/500 (inicio)
+Episodios evaluados: 500/500 (fin)
+
+
+============================================================
+RESUMEN GLOBAL
+============================================================
+Reward medio:              18.24 ± 1.24
+Reward p10/p50/p90:        16.85 / 17.90 / 20.20
+Reward por paso medio:     0.365 ± 0.025
+Reward/step p10/p50/p90:   0.337 / 0.358 / 0.404
+Habitaciones medias:       3.00 / 3
+Full coverage rate:        100.0%
+Paso medio de cobertura:   17.2
+Cobertura p10/p50/p90:     16.0 / 17.0 / 19.0
+Tiempo medio en C:         29.7%
+Tiempo en C p10/p50/p90:   22.0% / 30.0% / 36.0%
+Tiempo fuera de C medio:   70.3%
+Tiempo fuera de C p10/p50/p90: 64.0% / 70.0% / 78.0%
+Batería mínima media:      43.4%
+Batería mínima p10/p50/p90: 27.0% / 33.0% / 75.0%
+Cargas medias:             10.10
+Hab1/Hab2/Hab3 medias:     11.10 / 11.72 / 12.34
+Desbalance medio (std):    1.61
+Desbalance medio (max-min): 3.75
+Episodios con batería 0:   0/500
+Batería media al recargar: 87.3%
+
+Resultados guardados en ./experiments/exp_005_MediaHabSinCyConPenalAdaptativa/deep_evaluation/deepevaluation_resultsv3.csv
+
+Evaluación completada.

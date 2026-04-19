@@ -1,0 +1,45 @@
+Guardando log en: ./experiments/exp_001_MediaSoloHabsRemakeobs/deep_evaluation/deepevaluation_logv3.txt
+Conectando a CoppeliaSim...
+Observation space: Box(0.0, [  3. 100. 999. 999. 999. 999.], (6,), float32)
+Action space: Discrete(4)
+Cargando modelo: ./experiments/exp_001_MediaSoloHabsRemakeobs/model/ppo_robot.zip
+Wrapping the env with a `Monitor` wrapper
+Wrapping the env in a DummyVecEnv.
+
+Evaluando 500 episodios...
+
+
+Episodios evaluados:   0%|            | 0/500 [00:00<?, ?it/s]
+Episodios evaluados: 100%|############| 500/500 [17:09<00:00,  2.06s/it]
+
+============================================================
+RESUMEN GLOBAL
+============================================================
+Reward medio:              0.00 ± 0.00
+Reward p10/p50/p90:        0.00 / 0.00 / 0.00
+Reward por paso medio:     0.000 ± 0.000
+Reward/step p10/p50/p90:   0.000 / 0.000 / 0.000
+Habitaciones medias:       0.00 / 3
+Full coverage rate:        0.0%
+C:\Users\usuario\Documents\GitHub\TFG-Coppelia-Reinforcement-Learning\evaluate_deep.py:270: RuntimeWarning: Mean of empty slice
+  print(f"Paso medio de cobertura:   {np.nanmean(all_full_coverage_step):.1f}")
+Paso medio de cobertura:   nan
+Cobertura p10/p50/p90:     nan / nan / nan
+Tiempo medio en C:         100.0%
+Tiempo en C p10/p50/p90:   100.0% / 100.0% / 100.0%
+Tiempo fuera de C medio:   0.0%
+Tiempo fuera de C p10/p50/p90: 0.0% / 0.0% / 0.0%
+Batería mínima media:      100.0%
+Batería mínima p10/p50/p90: 100.0% / 100.0% / 100.0%
+Cargas medias:             1.00
+Hab1/Hab2/Hab3 medias:     0.00 / 0.00 / 0.00
+Desbalance medio (std):    0.00
+Desbalance medio (max-min): 0.00
+Episodios con batería 0:   0/500
+Batería media al recargar: 100.0%
+
+Resultados guardados en ./experiments/exp_001_MediaSoloHabsRemakeobs/deep_evaluation/deepevaluation_resultsv3.csv
+C:\Users\usuario\Documents\GitHub\TFG-Coppelia-Reinforcement-Learning\evaluate_deep.py:446: RuntimeWarning: All-NaN slice encountered
+  plt.ylim(0, min(100, max(5, np.nanmax(recharge_prob_by_bin.values) + 6)))
+
+Evaluación completada.
