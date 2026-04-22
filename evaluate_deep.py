@@ -419,6 +419,33 @@ if first_recharge_values.size:
     plt.ylabel("Frecuencia")
     plt.savefig(os.path.join(PLOTS_DIR, "hist_first_recharge_step.png"), dpi=150, bbox_inches="tight")
 
+if sum(all_recharge_from_hab1) + sum(all_recharge_from_hab2) + sum(all_recharge_from_hab3) + sum(all_recharge_from_other) > 0:
+    plt.figure()
+    room_labels = ["Hab1", "Hab2", "Hab3", "Otro"]
+    recharge_counts = [
+        sum(all_recharge_from_hab1),
+        sum(all_recharge_from_hab2),
+        sum(all_recharge_from_hab3),
+        sum(all_recharge_from_other),
+    ]
+    total_recharges = sum(recharge_counts)
+    recharge_pcts = [100.0 * c / max(1, total_recharges) for c in recharge_counts]
+    colors = ["#4C78A8", "#F58518", "#54A24B", "#E45756"]
+    bars = plt.bar(room_labels, recharge_pcts, color=colors)
+    for idx, bar in enumerate(bars):
+        plt.text(
+            bar.get_x() + bar.get_width() / 2.0,
+            bar.get_height() + 0.5,
+            f"{recharge_pcts[idx]:.1f}%\n(n={recharge_counts[idx]})",
+            ha="center",
+            va="bottom",
+            fontsize=8,
+        )
+    plt.title("Origen de recargas (desde qué habitación)")
+    plt.ylabel("Porcentaje (%)")
+    plt.ylim(0, max(5, max(recharge_pcts) + 10))
+    plt.savefig(os.path.join(PLOTS_DIR, "recharge_origin_rooms.png"), dpi=150, bbox_inches="tight")
+
 if decision_battery_samples:
     decisions_df = pd.DataFrame({
         "battery_before": decision_battery_samples,

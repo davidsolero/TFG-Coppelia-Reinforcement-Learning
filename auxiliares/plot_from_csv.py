@@ -13,7 +13,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # -- Configuracion -------------------------------------------------------------
-EXPERIMENT_NAME = "exp_006_MediaHabSinCyConPenalAdaptativaBalance"
+EXPERIMENT_NAME = "exp_001_MediaSoloHabsRemakeobs"
 DEEP_EVAL_DIR = f"./experiments/{EXPERIMENT_NAME}/deep_evaluation"
 
 
@@ -64,6 +64,14 @@ def has_columns(*names):
     return all(name in df.columns for name in names)
 
 
+def save_plot_if_missing(filename):
+    output_path = os.path.join(PLOTS_DIR, filename)
+    if os.path.exists(output_path):
+        print(f"Saltando (ya existe): {output_path}")
+        return
+    plt.savefig(output_path, dpi=150, bbox_inches="tight")
+
+
 print(f"CSV cargado: {CSV_PATH}")
 print(f"Graficas en: {PLOTS_DIR}")
 
@@ -90,7 +98,7 @@ plt.title("Habitaciones distintas visitadas por episodio")
 plt.xlabel("Numero de habitaciones (0-3)")
 plt.ylabel("Frecuencia")
 plt.xticks(room_categories)
-plt.savefig(os.path.join(PLOTS_DIR, "hist_rooms.png"), dpi=150, bbox_inches="tight")
+save_plot_if_missing("hist_rooms.png")
 
 plt.figure()
 plt.hist(time_in_c_pct, bins=np.arange(0, 105, 5), color="#54A24B")
@@ -98,7 +106,7 @@ plt.title("Tiempo en C por episodio")
 plt.xlabel("Tiempo en C (%)")
 plt.ylabel("Frecuencia")
 plt.xlim(0, 100)
-plt.savefig(os.path.join(PLOTS_DIR, "hist_time_in_c.png"), dpi=150, bbox_inches="tight")
+save_plot_if_missing("hist_time_in_c.png")
 
 if "room_std" in df.columns:
     plt.figure()
@@ -106,7 +114,7 @@ if "room_std" in df.columns:
     plt.title("Desbalance entre habitaciones (std)")
     plt.xlabel("Std de visitas")
     plt.ylabel("Frecuencia")
-    plt.savefig(os.path.join(PLOTS_DIR, "hist_room_std.png"), dpi=150, bbox_inches="tight")
+    save_plot_if_missing("hist_room_std.png")
 
 if has_columns("hab1_visits", "hab2_visits", "hab3_visits"):
     plt.figure()
@@ -130,7 +138,7 @@ if has_columns("hab1_visits", "hab2_visits", "hab3_visits"):
         )
     plt.title(f"Balance entre habitaciones (mas visitada: {room_labels[dominant_idx]})")
     plt.ylabel("Visitas medias por episodio")
-    plt.savefig(os.path.join(PLOTS_DIR, "balance_habs.png"), dpi=150, bbox_inches="tight")
+    save_plot_if_missing("balance_habs.png")
 
 if "reward_per_step" in df.columns:
     plt.figure()
@@ -138,7 +146,7 @@ if "reward_per_step" in df.columns:
     plt.title("Reward por paso")
     plt.xlabel("Reward/paso")
     plt.ylabel("Frecuencia")
-    plt.savefig(os.path.join(PLOTS_DIR, "hist_reward_per_step.png"), dpi=150, bbox_inches="tight")
+    save_plot_if_missing("hist_reward_per_step.png")
 
 if "min_battery" in df.columns:
     plt.figure()
@@ -147,7 +155,7 @@ if "min_battery" in df.columns:
     plt.xlabel("Bateria minima (%)")
     plt.ylabel("Frecuencia")
     plt.xlim(0, 100)
-    plt.savefig(os.path.join(PLOTS_DIR, "hist_min_battery.png"), dpi=150, bbox_inches="tight")
+    save_plot_if_missing("hist_min_battery.png")
 
 if has_columns("reward", "reward_per_step", "min_battery") and "room_std" in df.columns:
     plt.figure()
@@ -163,7 +171,7 @@ if has_columns("reward", "reward_per_step", "min_battery") and "room_std" in df.
     plt.xticks([1, 2, 3, 4, 5], ["Reward", "Reward/step", "Time_C(%)", "Battery(%)", "Room_std"])
     plt.title("Distribucion de metricas")
     plt.ylabel("Valor (unidades mixtas)")
-    plt.savefig(os.path.join(PLOTS_DIR, "boxplot_metrics.png"), dpi=150, bbox_inches="tight")
+    save_plot_if_missing("boxplot_metrics.png")
 
 if "recharge_battery_mean" in df.columns:
     recharge_battery_values = np.asarray(df["recharge_battery_mean"], dtype=np.float32)
@@ -174,7 +182,7 @@ if "recharge_battery_mean" in df.columns:
         plt.title("Bateria media al recargar (por episodio)")
         plt.xlabel("Bateria (%)")
         plt.ylabel("Frecuencia")
-        plt.savefig(os.path.join(PLOTS_DIR, "hist_battery_at_recharge.png"), dpi=150, bbox_inches="tight")
+        save_plot_if_missing("hist_battery_at_recharge.png")
 
 if "first_recharge_step" in df.columns:
     first_recharge_values = np.asarray(df["first_recharge_step"], dtype=np.float32)
@@ -185,7 +193,34 @@ if "first_recharge_step" in df.columns:
         plt.title("Paso de la primera recarga")
         plt.xlabel("Paso")
         plt.ylabel("Frecuencia")
-        plt.savefig(os.path.join(PLOTS_DIR, "hist_first_recharge_step.png"), dpi=150, bbox_inches="tight")
+        save_plot_if_missing("hist_first_recharge_step.png")
+
+if has_columns("recharge_from_hab1", "recharge_from_hab2", "recharge_from_hab3", "recharge_from_other"):
+    plt.figure()
+    room_labels = ["Hab1", "Hab2", "Hab3", "Otro"]
+    recharge_counts = [
+        int(df["recharge_from_hab1"].sum()),
+        int(df["recharge_from_hab2"].sum()),
+        int(df["recharge_from_hab3"].sum()),
+        int(df["recharge_from_other"].sum()),
+    ]
+    total_recharges = sum(recharge_counts)
+    recharge_pcts = [100.0 * c / max(1, total_recharges) for c in recharge_counts]
+    colors = ["#4C78A8", "#F58518", "#54A24B", "#E45756"]
+    bars = plt.bar(room_labels, recharge_pcts, color=colors)
+    for idx, bar in enumerate(bars):
+        plt.text(
+            bar.get_x() + bar.get_width() / 2.0,
+            bar.get_height() + 0.5,
+            f"{recharge_pcts[idx]:.1f}%\n(n={recharge_counts[idx]})",
+            ha="center",
+            va="bottom",
+            fontsize=8,
+        )
+    plt.title("Origen de recargas (desde qué habitación)")
+    plt.ylabel("Porcentaje (%)")
+    plt.ylim(0, max(5, max(recharge_pcts) + 10))
+    save_plot_if_missing("recharge_origin_rooms.png")
 
 print(
     "Aviso: no se puede reconstruir 'prob_recharge_by_battery_bin.png' "
