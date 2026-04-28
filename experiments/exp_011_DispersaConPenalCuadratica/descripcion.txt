@@ -1,0 +1,53 @@
+Experimento: exp_011_DispersaConPenalCuadratica
+==============================================
+
+Objetivo:
+---------
+Extender exp_010 añadiendo una penalización dispersa (final) cuadrática para el uso de C (recarga).
+Mantener la recompensa dispersa de balance de habitaciones y combinarla con una penalidad de C.
+
+Configuración de recompensa:
+----------------------------
+Per-step (pasos intermedios):
+  - reward = 0.0
+
+Al final del episodio (por truncación o depleción):
+  1. Recompensa de balance de habitaciones:
+     - Se calcula p_i = visitas_i / suma(visitas_habitaciones) para i ∈ {Hab1, Hab2, Hab3}
+     - desbalanceo = sum((1/3 - p_i)^2)
+     - max_desbalanceo = (3-1)/3 = 2/3
+     - reward_hab = 10 * ((max_desbalanceo - desbalanceo) / max_desbalanceo)
+     - Rango: [0, 10]
+
+  2. Penalización cuadrática de C:
+     - p_C = visitas_C / suma(todas_visitas)
+     - penalty_C = -10 * p_C^2
+     - Rango: [-10, 0]
+
+  3. Recompensa final:
+     - reward_final = reward_hab + penalty_C
+     - Rango teórico: [-10, 10]
+
+Depleción de batería:
+  - Si se agota la batería en un paso: reward = -10.0, terminated = True
+
+Razonamiento:
+-----------
+- Penalización cuadrática de C: incentiva minimizar el uso de C de forma suave.
+  Baja frecuencia (e.g., p_C=0.1) → penalty ≈ -0.1
+  Alta frecuencia (e.g., p_C=0.5) → penalty ≈ -2.5
+- Combinada con reward_hab, el agente balancea:
+  1. Distribuir bien visitas entre habitaciones (maximizar reward_hab)
+  2. Mantener C bajo control (minimizar penalty_C)
+
+Diferencia con exp_010:
+-----------------------
+- exp_010: solo recompensa de balance de habitaciones, C sin penalización explícita.
+- exp_011: añade penalización cuadrática de C al final, esperando reducir su uso frecuente.
+
+Parámetros en robot_env.py:
+---------------------------
+- ROOM_NODES = ['Hab1', 'Hab2', 'Hab3']
+- ALL_NODES = ['Hab1', 'Hab2', 'Hab3', 'C']
+- _max_steps = 500 (configurable en reset())
+- Escala de penalización C: 10 (equivalente a reward_hab)

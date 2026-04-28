@@ -18,8 +18,10 @@ Acciones (Discrete(4)):
     3 -> goTo:C
 
 Recompensa:
-    - Visitar una habitación (Hab1/Hab2/Hab3) que esté por debajo de la media
-      de visitas del episodio: +1.0
+    - exp_011 (dispersa con C): recompensa 0.0 en pasos intermedios.
+    - Al final por truncación: suma de dos términos:
+      1) Balance habitaciones en [0, 10]: 10 * ((2/3 - desbalanceo) / (2/3))
+      2) Penalización cuadrática C: -10 * p_C^2 donde p_C = visitas_C / suma(visitas_totales)
     - Batería agotada (terminated): -10.0
 """
 
@@ -48,9 +50,6 @@ NODE_TO_IDX = {
 
 ROOM_NODES = ['Hab1', 'Hab2', 'Hab3']  # Nodos con recompensa de visita
 ALL_NODES = ['Hab1', 'Hab2', 'Hab3', 'C']  # Todos los nodos visitables
-
-# Penalización por ir a C (exp_008 - fija, no adaptativa)
-C_PENALTY_FIXED = -0.2  # penalización constante por visitar C
 
 
 class RobotCoppeliaSim:
@@ -187,34 +186,22 @@ class RobotEnv(gym.Env):
         if final_state['depleted']:
             reward     = -10.0
             terminated = True
-        elif target_node in ROOM_NODES:
-            # incrementamos visitas
+        else:
             self._visit_counts[target_node] += 1
-            # media SOLO de habitaciones
-            media = np.mean([self._visit_counts[r] for r in ROOM_NODES])
-            visitas_antes = self._visit_counts[target_node] - 1
-            if visitas_antes < media - (1 / len(ROOM_NODES)):
-                reward = 1.0
-            elif visitas_antes > media + 1.0:
-                reward = -0.2
-        elif target_node == 'C':
-            self._visit_counts['C'] += 1
 
-            # Penalización fija por ir a C (exp_008).
-            reward = C_PENALTY_FIXED
+        self._numstepsinepisode += 1
+        if (not terminated) and self._numstepsinepisode >= self._max_steps:
+            truncated = True
+            reward = self._room_balance_reward() + self._c_quadratic_penalty()
 
         self._accreward += reward
-
-        if self._trace:
-            print(f"\treward={reward:.2f}  accrew={self._accreward:.2f}  "
-                  f"battery={final_state['battery']}  node={final_state['node']}")
 
         observation = self._get_obs()
         info        = self._get_info()
 
-        self._numstepsinepisode += 1
-        if self._numstepsinepisode >= self._max_steps:
-            truncated = True
+        if self._trace:
+            print(f"\treward={reward:.2f}  accrew={self._accreward:.2f}  "
+                  f"battery={final_state['battery']}  node={final_state['node']}")
 
         return observation, reward, terminated, truncated, info
 
@@ -235,3 +222,31 @@ class RobotEnv(gym.Env):
             'battery':    float(state['battery']),
             'acc_reward': float(self._accreward),
         }
+
+    def _room_balance_reward(self):
+        """Recompensa dispersa final basada en ajuste a distribución uniforme de habitaciones."""
+        visits = np.array([self._visit_counts[node] for node in ROOM_NODES], dtype=np.float32)
+        total_visits = float(np.sum(visits))
+
+        if total_visits <= 0.0:
+            return 0.0
+
+        probabilities = visits / total_visits
+        num_rooms = float(len(ROOM_NODES))
+        desbalanceo = float(np.sum((1.0 / num_rooms - probabilities) ** 2))
+        max_desbalanceo = (num_rooms - 1.0) / num_rooms
+
+        if max_desbalanceo <= 0.0:
+            return 0.0
+
+        normalized_reward = (max_desbalanceo - desbalanceo) / max_desbalanceo
+        return float(10.0 * np.clip(normalized_reward, 0.0, 1.0))
+
+    def _c_quadratic_penalty(self):
+        """Penalización dispersa final cuadrática por uso de C."""
+        all_visits = float(sum(self._visit_counts[node] for node in ALL_NODES))
+        if all_visits <= 0.0:
+            return 0.0
+
+        c_frequency = float(self._visit_counts['C']) / all_visits
+        return float(-10.0 * (c_frequency ** 2))

@@ -1,0 +1,42 @@
+exp_009_BalanceUniformeHabs
+---------------------------------
+- Base: misma estructura de entrenamiento que exp_008, pero cambiando la recompensa de habitaciones.
+- Cambio principal: sustituir la regla discreta por una recompensa densa basada en el desbalance respecto a la distribución uniforme de visitas en Hab1/Hab2/Hab3.
+- C mantiene una penalización densa proporcional a su frecuencia en el episodio, con escala base -0.2.
+- Se mantiene penalización -10 por batería agotada y fin de episodio.
+
+Formula exacta para las habitaciones
+-----------------------------------
+Sea p_i la probabilidad empírica de visitas de la habitacion i-ésima:
+    p_i = visitas_i / suma(visitas)
+
+Se calcula el desbalanceo como:
+    desbalanceo = sum((1/3 - p_i)^2)
+
+Como el maximo desbalanceo para N=3 es 2/3, la recompensa queda:
+    reward_habs = 10 * ((2/3 - desbalanceo) / (2/3))
+
+Esto da:
+- 10 cuando las visitas estan perfectamente balanceadas.
+- 0 cuando todo el peso cae en una sola habitacion.
+
+Calculo de recompensa (step)
+---------------------------
+if final_state['depleted']:
+    reward = -10.0
+elif target_node in ['Hab1', 'Hab2', 'Hab3']:
+    self._visit_counts[target_node] += 1
+    visits = np.array([
+        self._visit_counts['Hab1'],
+        self._visit_counts['Hab2'],
+        self._visit_counts['Hab3'],
+    ], dtype=np.float32)
+    p = visits / np.sum(visits)
+    desbalanceo = np.sum((1/3 - p) ** 2)
+    reward = 10 * ((2/3 - desbalanceo) / (2/3))
+elif target_node == 'C':
+    c_frequency = visitas_c / suma(visitas_hab1, visitas_hab2, visitas_hab3, visitas_c)
+    reward = -0.2 * c_frequencys
+
+
+--- realmente es un intento fallido de hacer dispersa hecho densa

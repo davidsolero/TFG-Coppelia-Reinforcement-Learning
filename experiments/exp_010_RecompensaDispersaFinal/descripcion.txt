@@ -1,0 +1,30 @@
+exp_010_RecompensaDispersaFinal
+--------------------------------
+- Objetivo: evitar la inflacion de reward por acumulacion paso a paso usando una recompensa dispersa final.
+- Recompensa intermedia en cada step: 0.0 (salvo deplecion).
+- Si hay bateria agotada: reward = -10.0 y fin de episodio (terminated=True).
+- Si el episodio termina por truncacion (max_steps): se calcula una unica recompensa final de balance en [0, 10].
+
+Formula de recompensa final
+--------------------------
+Con N = 3 habitaciones y p_i = visitas_i / suma(visitas_habitaciones):
+    desbalanceo = sum((1/N - p_i)^2)
+
+Como el maximo desbalanceo es (N-1)/N, para N=3 es 2/3:
+    reward_final = 10 * ((2/3 - desbalanceo) / (2/3))
+
+Interpretacion
+--------------
+- 10: balance perfecto entre Hab1/Hab2/Hab3 al final del episodio.
+- 0: desbalance maximo (toda la masa en una sola habitacion).
+- -10: episodio fallido por deplecion.
+
+Esquema en step()
+-----------------
+if depleted:
+    reward = -10.0
+    terminated = True
+elif truncated:
+    reward = reward_final_en_[0,10]
+else:
+    reward = 0.0

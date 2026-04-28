@@ -1,0 +1,982 @@
+================================================================================
+MEMORIA TFG — ESTADO ACTUAL
+Aprendizaje por refuerzo para el control de alto nivel de robots móviles
+David Solero Chicano
+================================================================================
+NOTA: Este fichero recoge todo el texto redactado hasta ahora.
+Los capítulos 6 y apéndices están en esbozo. El capítulo 5 se ampliará
+con los experimentos adicionales que aún están en curso.
+================================================================================
+ 
+ 
+--------------------------------------------------------------------------------
+PORTADA
+--------------------------------------------------------------------------------
+ 
+GRADO EN INGENIERÍA INFORMÁTICA
+ 
+Aprendizaje por refuerzo para el control de alto nivel de robots móviles
+Reinforcement Learning for High-Level Control of Mobile Robots
+ 
+Realizado por: David Solero Chicano
+Tutorizado por: Ana María Cruz Martín y Juan Antonio Fernández Madrigal
+Departamento: [Nombre del departamento — pendiente confirmar]
+Universidad de Málaga
+Fecha de defensa: 7 de julio de 2025 [REVISAR: estamos en 2026]
+ 
+ 
+--------------------------------------------------------------------------------
+RESUMEN Y ABSTRACT
+--------------------------------------------------------------------------------
+ 
+[PENDIENTE — se redactará al finalizar todos los experimentos]
+Extensión prevista: 150-250 palabras en castellano + traducción al inglés.
+Palabras clave: aprendizaje por refuerzo, robótica de vigilancia, PPO,
+CoppeliaSim, función de recompensa, gestión de batería.
+ 
+ 
+--------------------------------------------------------------------------------
+ÍNDICE DEFINITIVO (versión actualizada)
+--------------------------------------------------------------------------------
+ 
+Capítulo 1 — Introducción
+  1.1 Motivación
+  1.2 Objetivos
+  1.3 Estructura de la memoria
+ 
+Capítulo 2 — Estado del arte y tecnologías
+  2.1 Aprendizaje por refuerzo
+  2.2 Algoritmos de RL: de DQN a PPO
+  2.3 Gymnasium y Stable-Baselines3
+  2.4 CoppeliaSim como simulador robótico
+  2.5 Robótica de vigilancia y trabajos relacionados
+ 
+Capítulo 3 — Diseño del sistema
+  3.1 Arquitectura general
+  3.2 Entorno de simulación en CoppeliaSim
+    3.2.1 Escena y grafo de navegación
+    3.2.2 Script Lua: control del robot
+    3.2.3 Comunicación Python–CoppeliaSim
+  3.3 Entorno de aprendizaje por refuerzo
+    3.3.1 Espacio de observaciones
+    3.3.2 Espacio de acciones
+    3.3.3 Condiciones de finalización del episodio
+    3.3.4 Función de recompensa
+  3.4 Proceso de entrenamiento y evaluación
+ 
+Capítulo 4 — Metodología
+  4.1 Enfoque iterativo
+  4.2 Criterios de evaluación
+  4.3 Estructura de experimentos
+  4.4 Herramientas de monitorización y análisis
+ 
+Capítulo 5 — Experimentos y resultados
+  5.1 Recompensa base: visitas equilibradas a habitaciones
+    5.1.1 exp_001 y exp_001_remake
+  5.2 Incorporación de C en la media de visitas
+    5.2.1 exp_002: C en la media, sin recompensa por C
+    5.2.2 exp_003: C en la media, con recompensa por C
+  5.3 Penalización por visitar C
+    5.3.1 exp_004: penalización fija de -0.1
+  5.4 Penalización adaptativa y refinación del balance
+    5.4.1 exp_005: penalización adaptativa según nivel de batería
+    5.4.2 exp_006: penalización por sobrerrepresentación de habitación
+    5.4.3 exp_007: endurecimiento del umbral de penalización adaptativa
+    5.4.4 exp_008: penalización fija revisada
+  5.5 Comparativa final
+  [5.6 en adelante: experimentos adicionales pendientes]
+ 
+Capítulo 6 — Conclusiones y líneas futuras
+  6.1 Conclusiones
+  6.2 Líneas futuras
+ 
+Bibliografía
+ 
+Apéndice I — Manual de instalación y uso
+Apéndice II — Estructura del repositorio
+ 
+ 
+================================================================================
+CAPÍTULO 1 — INTRODUCCIÓN
+================================================================================
+ 
+1.1 Motivación
+--------------
+En los últimos años, la robótica móvil ha experimentado un crecimiento notable en
+aplicaciones de vigilancia, inspección y monitorización de entornos interiores. En
+este contexto, uno de los problemas fundamentales es la toma de decisiones de alto
+nivel: determinar qué zonas visitar, en qué orden y cuándo interrumpir la misión
+para recargar la batería, todo ello de forma autónoma y sin intervención humana.
+ 
+Los enfoques clásicos de planificación resuelven este problema mediante reglas fijas
+o heurísticas diseñadas manualmente, lo que limita su capacidad de adaptación ante
+condiciones cambiantes o no previstas. El aprendizaje por refuerzo (RL, del inglés
+Reinforcement Learning) ofrece una alternativa: permite que un agente aprenda una
+política de comportamiento óptima a través de la experiencia, sin necesidad de
+programar explícitamente cada caso. Esta característica lo convierte en un enfoque
+especialmente adecuado para problemas donde el comportamiento deseado es difícil de
+especificar a priori pero fácil de evaluar mediante una función de recompensa.
+ 
+El presente Trabajo de Fin de Grado aborda precisamente este problema: el diseño y
+entrenamiento de un agente basado en aprendizaje por refuerzo que controle a alto
+nivel un robot móvil simulado, decidiendo de forma autónoma qué habitaciones visitar
+y cuándo acudir a recargar su batería.
+ 
+ 
+1.2 Objetivos
+-------------
+El objetivo principal de este trabajo es desarrollar un sistema de control de alto
+nivel para un robot móvil simulado, basado en aprendizaje por refuerzo, que sea
+capaz de maximizar la cobertura del entorno gestionando de forma eficiente su
+autonomía energética.
+ 
+Para alcanzar este objetivo, se plantean los siguientes objetivos específicos:
+ 
+- Diseñar e implementar un entorno de simulación en CoppeliaSim con un robot
+  Pioneer P3DX, un mapa de nodos navegables y un modelo de batería realista.
+- Desarrollar una interfaz de comunicación entre el simulador y Python que permita
+  ejecutar episodios de entrenamiento de forma programática y en modo headless.
+- Definir el problema de aprendizaje por refuerzo: espacio de estados, espacio de
+  acciones y función de recompensa.
+- Implementar y entrenar un agente mediante algoritmos de aprendizaje por refuerzo,
+  utilizando la librería Stable-Baselines3.
+- Evaluar el comportamiento aprendido y analizar los resultados obtenidos.
+ 
+ 
+1.3 Estructura de la memoria
+-----------------------------
+El resto de la memoria se organiza de la siguiente forma:
+ 
+El capítulo 2 presenta el estado del arte, revisando los fundamentos del aprendizaje
+por refuerzo, los principales algoritmos empleados en robótica móvil y las
+herramientas utilizadas en el desarrollo.
+ 
+El capítulo 3 describe el sistema desarrollado: el entorno de simulación en
+CoppeliaSim, la integración con Python y la definición del problema de aprendizaje
+por refuerzo.
+ 
+El capítulo 4 describe la metodología de trabajo adoptada, el ciclo iterativo de
+experimentación y los criterios de evaluación empleados.
+ 
+El capítulo 5 presenta los experimentos realizados, el proceso de diseño iterativo
+de la función de recompensa y los resultados obtenidos en cada variante.
+ 
+El capítulo 6 expone las conclusiones del trabajo y las posibles líneas de trabajo
+futuro.
+ 
+Finalmente, se incluyen los apéndices con información complementaria sobre la
+instalación del sistema y la estructura del repositorio.
+ 
+ 
+================================================================================
+CAPÍTULO 2 — ESTADO DEL ARTE Y TECNOLOGÍAS
+================================================================================
+ 
+Este capítulo revisa los fundamentos teóricos y las herramientas sobre las que se
+asienta el trabajo. Se organiza en cuatro bloques: los principios del aprendizaje
+por refuerzo, el algoritmo PPO y su justificación frente a alternativas, el marco
+de trabajo Gymnasium y la librería Stable-Baselines3, y finalmente el simulador
+CoppeliaSim.
+ 
+ 
+2.1 Aprendizaje por refuerzo
+-----------------------------
+El aprendizaje por refuerzo (RL, del inglés Reinforcement Learning) es una rama del
+aprendizaje automático en la que un agente aprende a tomar decisiones mediante la
+interacción con un entorno. A diferencia del aprendizaje supervisado, en RL no
+existe un conjunto de ejemplos etiquetados: el agente recibe señales de recompensa
+como consecuencia de sus acciones y ajusta su comportamiento para maximizar la
+recompensa acumulada a lo largo del tiempo.
+ 
+El marco formal que sustenta el RL es el Proceso de Decisión de Markov (MDP, del
+inglés Markov Decision Process), definido por la tupla (S, A, P, R, γ), donde S es
+el espacio de estados, A el espacio de acciones, P la función de transición de
+estados, R la función de recompensa, y γ ∈ [0,1) el factor de descuento que pondera
+la importancia de las recompensas futuras.
+ 
+En cada paso de tiempo t, el agente observa el estado s_t, selecciona una acción a_t
+según su política π(a|s), recibe una recompensa r_t y transita al nuevo estado
+s_{t+1}. El objetivo del agente es encontrar una política óptima π* que maximice el
+retorno esperado:
+ 
+    G_t = r_t + γ·r_{t+1} + γ²·r_{t+2} + ...
+ 
+La función de valor V^π(s) expresa el retorno esperado desde el estado s siguiendo
+la política π. La función de valor de acción Q^π(s,a) extiende este concepto a pares
+estado-acción. Las ecuaciones de Bellman describen la relación recursiva entre estos
+valores y constituyen la base teórica de la mayoría de algoritmos de RL.
+ 
+Un concepto central es el dilema exploración-explotación: el agente debe equilibrar
+la exploración de acciones desconocidas, que pueden conducir a mejores recompensas,
+con la explotación de las acciones que ya sabe que funcionan bien. Este equilibrio
+es especialmente relevante en las fases iniciales del entrenamiento.
+ 
+[FIGURA: Ciclo de interacción agente-entorno — elaboración propia]
+ 
+ 
+2.2 Algoritmos de aprendizaje por refuerzo: de DQN a PPO
+---------------------------------------------------------
+Existen múltiples familias de algoritmos de RL. A continuación se revisan brevemente
+los más relevantes para este trabajo, con el objetivo de justificar la elección de
+PPO.
+ 
+DQN (Deep Q-Network) fue uno de los primeros algoritmos que combinó redes neuronales
+profundas con RL, aprendiendo directamente la función Q a partir de píxeles. Sin
+embargo, DQN está restringido a espacios de acciones discretos y tiende a ser
+inestable en entornos con recompensas densas y muchos pasos por episodio.
+ 
+A2C/A3C (Advantage Actor-Critic) introduce la arquitectura actor-crítico: el actor
+aprende la política y el crítico estima el valor del estado para reducir la varianza
+del gradiente. Son algoritmos eficientes pero sensibles a los hiperparámetros y al
+tamaño del paso de aprendizaje.
+ 
+SAC (Soft Actor-Critic) es un algoritmo off-policy basado en la maximización de
+entropía, muy eficiente en espacios de acciones continuos. Sin embargo, está diseñado
+para acciones continuas y no se adapta de forma natural a espacios discretos como el
+de este trabajo.
+ 
+PPO (Proximal Policy Optimization), propuesto por Schulman et al. (2017), es
+actualmente uno de los algoritmos de RL más utilizados tanto en investigación como
+en aplicaciones prácticas. PPO es un algoritmo on-policy de tipo actor-crítico que
+introduce una restricción sobre la magnitud de la actualización de la política en
+cada paso. Esta restricción se implementa mediante una función objetivo recortada
+(clipped objective) que impide actualizaciones demasiado grandes, dotando al
+algoritmo de una notable estabilidad durante el entrenamiento.
+ 
+Las principales razones por las que se eligió PPO en este trabajo son las siguientes.
+Primero, funciona de forma nativa con espacios de acciones discretos, que es
+exactamente el tipo de espacio que se define en este problema (cuatro destinos
+posibles). Segundo, es robusto frente a una amplia variedad de configuraciones de
+hiperparámetros, lo que resulta ventajoso en una fase experimental donde la función
+de recompensa evoluciona entre experimentos. Tercero, está disponible en
+implementaciones de alta calidad y bien documentadas, en particular en la librería
+Stable-Baselines3. Por último, su carácter on-policy garantiza que el agente aprende
+directamente de la política que está ejecutando en cada momento, lo cual favorece la
+coherencia entre el comportamiento explorado y el aprendido.
+ 
+ 
+2.3 Gymnasium y Stable-Baselines3
+-----------------------------------
+Gymnasium es la librería estándar de facto para definir entornos de aprendizaje por
+refuerzo en Python. Desarrollada y mantenida por la Farama Foundation como evolución
+del antiguo OpenAI Gym, Gymnasium proporciona una interfaz común basada en tres
+métodos principales: reset(), que inicializa el episodio y devuelve la observación
+inicial; step(action), que ejecuta una acción y devuelve la observación siguiente,
+la recompensa, y los flags de finalización; y close(), que libera los recursos del
+entorno.
+ 
+Esta interfaz estandarizada permite que cualquier algoritmo de RL compatible con
+Gymnasium pueda operar sobre cualquier entorno que la implemente, sin modificaciones.
+En este trabajo, el entorno RobotEnv hereda de gymnasium.Env e implementa esta
+interfaz, lo que hace posible conectarlo directamente con Stable-Baselines3.
+ 
+Stable-Baselines3 (SB3) es una librería Python que proporciona implementaciones
+limpias, fiables y bien documentadas de los principales algoritmos de RL modernos,
+incluyendo PPO, A2C, SAC y DQN. SB3 está construida sobre PyTorch, sigue las
+convenciones de Gymnasium y ofrece herramientas de integración con TensorBoard para
+la monitorización del entrenamiento. Su diseño modular permite personalizar la
+arquitectura de la red neuronal, los hiperparámetros y las estrategias de exploración
+con pocas líneas de código. En este trabajo se utiliza la implementación de PPO de
+SB3 con su política MlpPolicy, que corresponde a una red neuronal densa
+(Multi-Layer Perceptron).
+ 
+ 
+2.4 CoppeliaSim como simulador robótico
+-----------------------------------------
+CoppeliaSim (anteriormente conocido como V-REP) es un simulador robótico de
+propósito general desarrollado por Coppelia Robotics. Incorpora un motor de física
+integrado, soporte para múltiples modelos de robots y sensores, y un sistema de
+scripting en Lua que permite programar el comportamiento de los objetos directamente
+en la escena. Entre sus características más relevantes para este trabajo destaca su
+API ZeroMQ Remote, que permite controlar la simulación desde Python mediante el paso
+de mensajes síncronos o asíncronos, y su modo de ejecución headless, que posibilita
+lanzar simulaciones sin interfaz gráfica, reduciendo significativamente el consumo
+de recursos durante el entrenamiento.
+ 
+En la versión educativa, CoppeliaSim EduVersion es gratuita y ampliamente utilizada
+en entornos académicos, lo que la convierte en una opción idónea para proyectos de
+investigación y TFG. El robot seleccionado para las simulaciones es el Pioneer P3DX,
+un robot diferencial de dos ruedas con amplia presencia en la literatura de robótica
+móvil, cuya dinámica y modelo de colisión están disponibles de serie en la biblioteca
+de CoppeliaSim.
+ 
+La integración entre CoppeliaSim y Python se realiza mediante la librería
+coppeliasim_zmqremoteapi_client, que expone la API del simulador como un objeto
+Python. Esta arquitectura permite que el entorno Gymnasium actúe como capa de control
+de alto nivel, enviando comandos de navegación al script Lua del robot y leyendo el
+estado resultante, todo ello de forma transparente para el algoritmo de RL.
+ 
+ 
+2.5 Robótica de vigilancia y trabajos relacionados
+----------------------------------------------------
+La vigilancia autónoma mediante robots móviles es un problema ampliamente estudiado
+en la literatura. Los primeros trabajos se centraron en algoritmos deterministas de
+patrullaje, como los propuestos por Chevaleyre (2004), que definían rutas cíclicas
+para maximizar la frecuencia de visita a cada zona. Trabajos posteriores incorporaron
+planificación basada en grafos y heurísticas para entornos dinámicos.
+ 
+La incorporación del aprendizaje por refuerzo a este dominio ha ganado interés en la
+última década. Investigaciones como las de Huang et al. (2019) demuestran que agentes
+entrenados con DQN o PPO son capaces de aprender políticas de patrullaje eficientes
+en entornos simulados, superando en equilibrio de cobertura a las soluciones basadas
+en reglas fijas. La gestión de la batería como recurso limitado ha sido abordada en
+trabajos como el de Notomista et al. (2020), que formulan el problema como un MDP con
+restricciones energéticas, obteniendo políticas que aprenden a recargar de forma
+proactiva antes de que la batería se agote.
+ 
+Este trabajo se enmarca en esa línea de investigación, abordando simultáneamente el
+equilibrio de cobertura entre habitaciones y la gestión autónoma de la energía, en
+un entorno simulado de complejidad controlada que permite analizar con detalle el
+impacto de distintas funciones de recompensa sobre el comportamiento emergente del
+agente.
+ 
+ 
+================================================================================
+CAPÍTULO 3 — DISEÑO DEL SISTEMA
+================================================================================
+ 
+Este capítulo describe el sistema desarrollado en su totalidad: la capa de simulación
+implementada en CoppeliaSim, la capa de control en Python y la definición del
+problema de aprendizaje por refuerzo. Ambas capas están estrechamente acopladas y se
+describen conjuntamente para facilitar la comprensión del flujo completo de una
+interacción agente-entorno.
+ 
+ 
+3.1 Arquitectura general
+-------------------------
+El sistema se organiza en tres niveles que se comunican de forma síncrona durante
+el entrenamiento y la evaluación.
+ 
+El nivel más bajo es la capa de simulación, implementada mediante un script Lua
+ejecutado dentro de CoppeliaSim. Este script controla la cinemática del robot
+Pioneer P3DX, el modelo de batería y el grafo de rutas navegables. Expone su estado
+al exterior mediante señales de la API ZeroMQ y acepta comandos de navegación en
+forma de cadenas de texto.
+ 
+El nivel intermedio es la capa de entorno RL, implementada en Python a través de la
+clase RobotEnv, que hereda de gymnasium.Env. Esta capa traduce las acciones discretas
+del agente en comandos comprensibles para el script Lua, lee el estado resultante y
+calcula la recompensa según la función definida en cada experimento.
+ 
+El nivel más alto es la capa de aprendizaje, donde opera el algoritmo PPO de
+Stable-Baselines3. Este nivel interactúa exclusivamente con RobotEnv a través de la
+interfaz estándar de Gymnasium, sin conocimiento alguno de los detalles de la
+simulación subyacente.
+ 
+[FIGURA: Diagrama de arquitectura del sistema — elaboración propia]
+ 
+ 
+3.2 Entorno de simulación en CoppeliaSim
+-----------------------------------------
+ 
+3.2.1 Escena y grafo de navegación
+ 
+La escena diseñada en CoppeliaSim representa un entorno interior simplificado
+compuesto por cinco nodos navegables: el nodo de inicio R, tres habitaciones Hab1,
+Hab2 y Hab3, y una estación de carga C. Cada nodo está conectado con el resto
+mediante rutas bidireccionales predefinidas, formando un grafo completamente conexo.
+Las rutas se definen como objetos de tipo Path en la escena y son seguidas por el
+robot mediante interpolación de posición a lo largo de la trayectoria.
+ 
+El robot utilizado es el Pioneer P3DX, un robot diferencial cuya dinámica de
+movimiento está modelada directamente en el script Lua. El desplazamiento entre nodos
+no se implementa mediante control de velocidad de ruedas, sino mediante movimiento
+cinemático directo sobre las trayectorias, lo que simplifica el sistema y permite
+centrarse en el problema de decisión de alto nivel sin introducir ruido de bajo nivel.
+ 
+[FIGURA: Escena CoppeliaSim con el grafo de nodos — captura de pantalla]
+ 
+ 
+3.2.2 Script Lua: control del robot
+ 
+El comportamiento del robot dentro de la simulación está completamente gestionado por
+script pioneer.lua. Este script se ejecuta en el hilo principal de CoppeliaSim y
+realiza tres funciones principales.
+ 
+En primer lugar, implementa el sistema de navegación, que incluye la búsqueda del
+camino más corto entre el nodo actual y el destino mediante el algoritmo de Dijkstra
+sobre el grafo de rutas, el seguimiento de trayectorias y la realineación del robot
+al llegar a cada nodo.
+ 
+En segundo lugar, gestiona el modelo de batería, que simula un ciclo realista de
+descarga y carga. La descarga se divide en dos fases: una meseta inicial en la que
+la batería permanece al 100% durante un tiempo configurable, seguida de una caída
+lineal hasta el agotamiento. La carga sigue un proceso proporcional al déficit desde
+el nivel actual hasta el 100%.
+ 
+En tercer lugar, implementa el sistema de comandos remotos, que permite a Python
+controlar el robot mediante señales de texto. Los comandos reconocidos son
+goTo:<nodo>, que ordena al robot desplazarse a un nodo destino; reset, que reinicia
+el entorno al estado inicial; stop, que detiene el robot; y callOperator, que
+teleporta al robot a la estación de carga e inicia la carga. El estado del robot se
+publica continuamente mediante señales de enteros y cadenas accesibles desde Python:
+nivel de batería, nodo actual, estado interno y flag de batería agotada.
+ 
+ 
+3.2.3 Comunicación Python–CoppeliaSim
+ 
+La comunicación entre Python y CoppeliaSim se establece mediante la librería
+coppeliasim_zmqremoteapi_client, que implementa la API ZeroMQ Remote de CoppeliaSim.
+Esta API permite leer y escribir señales de la simulación desde Python de forma
+síncrona, con una latencia típica de pocas decenas de milisegundos por operación.
+ 
+La clase RobotCoppeliaSim encapsula toda la lógica de comunicación. El método
+go_to(node) envía el comando correspondiente y bloquea la ejecución de Python hasta
+que el robot reporta uno de los estados finales esperados: arrived, depleted o error.
+El método reset() reinicia el entorno y espera la confirmación ready. Esta
+sincronización garantiza que cada llamada a step() en el entorno Gymnasium corresponde
+exactamente a un desplazamiento completo del robot en la simulación.
+ 
+ 
+3.3 Entorno de aprendizaje por refuerzo
+-----------------------------------------
+ 
+3.3.1 Espacio de observaciones
+ 
+El vector de observación tiene seis componentes de tipo float32:
+ 
+  Índice  Variable                                  Rango
+  ------  ----------------------------------------  ----------
+  0       Nodo actual (Hab1=0, Hab2=1, Hab3=2, C=3) [0, 3]
+  1       Nivel de batería                           [0, 100]
+  2       Visitas a Hab1 en el episodio              [0, 999]
+  3       Visitas a Hab2 en el episodio              [0, 999]
+  4       Visitas a Hab3 en el episodio              [0, 999]
+  5       Visitas a C en el episodio                 [0, 999]
+ 
+Los contadores de visitas proporcionan al agente información sobre el desequilibrio
+acumulado entre habitaciones, lo que le permite aprender a priorizar aquellas que
+han sido menos visitadas. El nivel de batería es fundamental para que el agente
+aprenda a anticipar la necesidad de recarga.
+ 
+ 
+3.3.2 Espacio de acciones
+ 
+El espacio de acciones es discreto con cuatro valores posibles:
+ 
+  Acción  Destino
+  ------  -------
+  0       Hab1
+  1       Hab2
+  2       Hab3
+  3       C (estación de carga)
+ 
+Cada acción ordena al robot desplazarse al nodo correspondiente. Si el robot ya se
+encuentra en ese nodo, el desplazamiento se completa de forma inmediata sin consumo
+adicional de batería.
+ 
+ 
+3.3.3 Condiciones de finalización del episodio
+ 
+Un episodio puede terminar de dos formas. La finalización por terminated=True ocurre
+cuando la batería llega a cero, lo que constituye un fallo que el agente debe aprender
+a evitar. La finalización por truncated=True ocurre cuando se supera el número máximo
+de pasos por episodio, fijado por defecto en 50. Este límite garantiza que los
+episodios tengan una duración acotada durante el entrenamiento.
+ 
+ 
+3.3.4 Función de recompensa
+ 
+El diseño de la función de recompensa es el núcleo experimental de este trabajo y
+evoluciona a lo largo de los distintos experimentos. La estructura general se mantiene
+constante: se otorga una recompensa positiva por visitar habitaciones de forma
+equilibrada, se penaliza en distintos grados la visita innecesaria a la estación de
+carga, y se aplica una penalización severa si la batería se agota. El capítulo 5
+detalla la evolución de esta función a lo largo de los experimentos realizados.
+ 
+ 
+3.4 Proceso de entrenamiento y evaluación
+------------------------------------------
+El entrenamiento se ejecuta mediante el script train.py, que instancia el entorno
+RobotEnv, verifica su compatibilidad con Gymnasium mediante check_env, crea un modelo
+PPO con política MlpPolicy y lanza el entrenamiento durante un número configurable
+de pasos totales. El modelo resultante se guarda en disco en formato .zip para su
+posterior evaluación.
+ 
+La evaluación se realiza en dos modalidades. La evaluación rápida ejecuta un número
+reducido de episodios con política determinista (deterministic=True) y muestra por
+consola las métricas principales de cada episodio. La evaluación profunda ejecuta 500
+episodios y calcula un conjunto amplio de métricas estadísticas: recompensa media y
+por percentiles, tasa de cobertura completa, tiempo proporcional en la estación de
+carga, batería mínima alcanzada, desbalance entre habitaciones y número de cargas por
+episodio. Los resultados se exportan en formato CSV y se visualizan mediante
+histogramas y diagramas de caja.
+ 
+ 
+================================================================================
+CAPÍTULO 4 — METODOLOGÍA
+================================================================================
+ 
+Este capítulo describe el proceso de trabajo seguido durante el desarrollo del TFG.
+Dado que el núcleo del proyecto es el diseño de la función de recompensa para el
+agente de aprendizaje por refuerzo, la metodología adoptada es de naturaleza
+iterativa y experimental: cada experimento parte de los resultados del anterior,
+introduce una modificación concreta y analiza su efecto sobre el comportamiento del
+agente.
+ 
+ 
+4.1 Enfoque iterativo
+----------------------
+El desarrollo del sistema no siguió un proceso lineal de diseño, implementación y
+evaluación, sino un ciclo continuo en el que cada iteración comprende las siguientes
+fases:
+ 
+En primer lugar, se define una hipótesis sobre el comportamiento esperado del agente
+dado el diseño actual de la función de recompensa. Esta hipótesis puede surgir de la
+observación de resultados previos, del análisis de las métricas de evaluación o de
+la detección de comportamientos no deseados en el agente entrenado.
+ 
+A continuación, se implementa la modificación correspondiente en robot_env.py,
+ajustando la función de recompensa de forma controlada y manteniendo el resto del
+sistema invariante. Cada variante se documenta en su carpeta de experimento con una
+descripción del cambio introducido y el resultado esperado.
+ 
+Posteriormente, se lanza el entrenamiento del agente durante un número fijo de pasos
+mediante train.py, se monitorizan las curvas de aprendizaje en TensorBoard y se
+verifica que el entrenamiento ha convergido antes de evaluar.
+ 
+Finalmente, se ejecuta la evaluación profunda con 500 episodios mediante
+evaluate_deep.py y se analizan las métricas obtenidas frente a los criterios de
+éxito definidos y frente a los resultados de los experimentos anteriores.
+ 
+ 
+4.2 Criterios de evaluación
+-----------------------------
+Para poder comparar experimentos de forma objetiva, se definió un conjunto de
+criterios de éxito cuantitativos organizados en tres bloques.
+ 
+El bloque A recoge los requisitos obligatorios: una tasa de cobertura completa del
+100%, es decir, el agente debe visitar las tres habitaciones en todos los episodios
+evaluados, y cero episodios con batería agotada en los 500 episodios de evaluación
+profunda. Ningún experimento se considera satisfactorio si no cumple estos dos
+requisitos.
+ 
+El bloque B agrupa las métricas de eficiencia y estabilidad: tiempo medio en la
+estación de carga inferior al 28%, número medio de cargas por episodio inferior a
+12.5, paso medio de primera cobertura completa inferior a 6, y recompensa por paso
+media superior a 0.37 con baja dispersión.
+ 
+El bloque C recoge las métricas de balance energético y equilibrio de patrulla:
+desviación típica media de visitas entre habitaciones inferior a 1.30, rango máximo
+de visitas inferior a 3, y batería mínima alcanzada superior al 30% en el percentil
+10.
+ 
+Este conjunto de criterios permite distinguir con precisión entre experimentos que
+resuelven el problema correctamente y aquellos que lo hacen de forma eficiente y
+estable, lo cual es relevante para orientar las decisiones de diseño en cada
+iteración.
+ 
+ 
+4.3 Estructura de experimentos
+--------------------------------
+Cada experimento se almacena en una carpeta independiente bajo el directorio
+experiments/, con una nomenclatura descriptiva que refleja la variante de recompensa
+implementada. Dentro de cada carpeta se encuentran el modelo entrenado en formato
+.zip, los logs de TensorBoard, el fichero descripcion.txt con la especificación de
+la función de recompensa y los resultados de la evaluación profunda en formato CSV.
+ 
+Esta organización facilita la reproducibilidad de los experimentos y la comparación
+directa entre variantes, ya que todos comparten la misma infraestructura de
+simulación, los mismos hiperparámetros de PPO y el mismo número de pasos de
+entrenamiento, variando únicamente la función de recompensa definida en robot_env.py.
+ 
+ 
+4.4 Herramientas de monitorización y análisis
+----------------------------------------------
+Durante el entrenamiento se utiliza TensorBoard para visualizar en tiempo real las
+curvas de recompensa episódica, la longitud media de los episodios y las métricas
+internas del algoritmo PPO como la pérdida del crítico y la entropía de la política.
+Estas curvas permiten detectar de forma temprana problemas de convergencia o
+comportamientos anómalos sin necesidad de esperar a la evaluación completa.
+ 
+Para el análisis posterior al entrenamiento se emplean pandas y matplotlib, que
+procesan los ficheros CSV generados por evaluate_deep.py y producen histogramas,
+diagramas de caja y gráficas de distribución de las métricas clave. Estos resultados
+se utilizan tanto para la toma de decisiones en la siguiente iteración como para la
+elaboración de las figuras incluidas en el capítulo de resultados.
+ 
+ 
+================================================================================
+CAPÍTULO 5 — EXPERIMENTOS Y RESULTADOS
+================================================================================
+ 
+Este capítulo describe el proceso de diseño iterativo de la función de recompensa y
+los resultados obtenidos en cada experimento. Los ocho experimentos realizados se
+presentan agrupados en cuatro líneas de evolución: la recompensa base, la
+incorporación de C en la media, la introducción de penalizaciones y la refinación
+adaptativa y de balance. Cada sección describe la hipótesis que motivó el
+experimento, el diseño de recompensa implementado, el comportamiento observado y las
+métricas de evaluación profunda obtenidas sobre 500 episodios. El capítulo concluye
+con una tabla comparativa que recoge las métricas clave de todos los experimentos.
+ 
+ 
+5.1 Recompensa base: visitas equilibradas a habitaciones
+---------------------------------------------------------
+ 
+5.1.1 exp_001 y exp_001_remake: recompensa por media de habitaciones
+ 
+El primer experimento establece el punto de partida del sistema. La hipótesis inicial
+es que recompensar al agente únicamente por visitar habitaciones que estén por debajo
+de la media de visitas del episodio es suficiente para inducir un patrullaje
+equilibrado, siempre que la penalización por agotamiento de batería sea
+suficientemente severa para forzar visitas a la estación de carga.
+ 
+La función de recompensa es la siguiente: se otorga +1.0 por visitar Hab1, Hab2 o
+Hab3 cuando el número de visitas previas a esa habitación es inferior a la media de
+visitas de las tres habitaciones; ir a C no genera ni recompensa ni penalización; y
+agotar la batería genera una penalización de -10.0 con terminación del episodio.
+ 
+La variante exp_001_MediaSoloHabsRemakeobs introduce únicamente un cambio en la
+representación del espacio de observaciones, pasando de cuatro a seis componentes
+al añadir los contadores individuales de visitas por habitación. Esta modificación
+es relevante porque proporciona al agente información explícita sobre el desequilibrio
+acumulado, que anteriormente solo podía inferirse de forma implícita.
+ 
+Los resultados de la evaluación profunda revelan un comportamiento degenerado: el
+agente aprendió a ir directamente a C y permanecer allí durante todo el episodio,
+obteniendo recompensa cero pero evitando el riesgo de penalización por batería
+agotada. La tasa de cobertura completa es del 0% y el tiempo en C es del 100%. Este
+comportamiento es consecuencia directa de la ausencia de penalización por ir a C:
+desde el punto de vista del agente, quedarse en C es la estrategia óptima bajo la
+política aprendida porque elimina por completo el riesgo de -10.0 sin coste alguno.
+ 
+[FIGURA: Gráfica de balance de habitaciones exp_001_remake — experimentos/exp_001_MediaSoloHabsRemakeobs/deep_evaluation/plotsv3/balance_habs.png]
+ 
+ 
+5.2 Incorporación de C en la media de visitas
+----------------------------------------------
+ 
+5.2.1 exp_002: C en la media, sin recompensa por C
+ 
+La segunda línea de experimentación trata de corregir el comportamiento anterior
+incluyendo C en el cómputo de la media de visitas. La hipótesis es que si las visitas
+a C incrementan la media de referencia, el agente tendrá menos incentivo para ir allí
+repetidamente, ya que cada visita a C eleva el umbral necesario para obtener +1.0 en
+las habitaciones.
+ 
+La función de recompensa modifica el cálculo de la media incluyendo el contador de
+visitas a C junto con los de Hab1, Hab2 y Hab3. Sin embargo, visitar C sigue sin
+generar recompensa directa. Los resultados muestran una mejora parcial: la cobertura
+completa sigue siendo del 0% porque el agente desarrolla una política asimétrica,
+visitando principalmente Hab2 y Hab3 de forma repetida mientras ignora
+sistemáticamente Hab1. Las visitas medias por episodio son 0.00 / 4.34 / 11.71 para
+Hab1, Hab2 y Hab3 respectivamente, con un desbalance medio (max-min) de 11.71. El
+tiempo en C asciende al 67.9%, lo que indica que el agente sigue utilizando C como
+destino mayoritario.
+ 
+[FIGURA: balance_habs.png — exp_002]
+[FIGURA: hist_time_in_c.png — exp_002]
+ 
+ 
+5.2.2 exp_003: C en la media, con recompensa por C
+ 
+El tercer experimento extiende el anterior otorgando recompensa +1.0 también por
+visitar C cuando está por debajo de la media. La hipótesis es que tratar C exactamente
+igual que las habitaciones podría inducir un comportamiento más equilibrado al
+unificar el criterio de recompensa.
+ 
+El resultado es el opuesto al deseado: el agente aprende que ir a C de forma frecuente
+genera recompensa positiva sin riesgo de penalización, ya que la batería permanece
+siempre al 100% al estar cargando continuamente. La cobertura completa alcanza el
+100%, pero el tiempo en C sube al 48.4% y el número de cargas por episodio es de
+16.25, lo que indica que el agente recarga con una frecuencia muy superior a la
+necesaria. La batería mínima media es del 99.1%, confirmando que el agente nunca
+necesita realmente recargar y lo hace de forma preventiva y excesiva.
+ 
+[FIGURA: hist_time_in_c.png — exp_003]
+ 
+ 
+5.3 Penalización por visitar C
+--------------------------------
+ 
+5.3.1 exp_004: penalización fija de -0.1 por ir a C
+ 
+La cuarta línea introduce por primera vez una penalización explícita por visitar C,
+con el objetivo de desincentivar las cargas innecesarias. La función de recompensa
+recupera el esquema de exp_001 (media solo de habitaciones, sin C) y añade una
+penalización fija de -0.1 cada vez que el agente elige C como destino.
+ 
+Los resultados muestran que la cobertura completa es del 100% y la batería nunca se
+agota, lo que satisface el bloque A de los criterios de éxito. Sin embargo, el tiempo
+en C es del 51.2% y el número medio de cargas es de 18.03, ambos valores muy por
+encima de los objetivos del bloque B. La batería media al recargar es del 100%, lo
+que confirma que el agente recarga cuando la batería aún está completamente llena.
+La penalización de -0.1 resulta insuficiente para modificar este comportamiento: la
+recompensa esperada por visitar C (0 neto después de la penalización) sigue siendo
+superior a la alternativa de arriesgarse a que la batería caiga, dado que el agente
+no ha aprendido aún a gestionar proactivamente la energía.
+ 
+[FIGURA: prob_recharge_by_battery_bin.png — exp_004]
+ 
+ 
+5.4 Penalización adaptativa y refinación del balance
+------------------------------------------------------
+ 
+5.4.1 exp_005: penalización adaptativa según nivel de batería
+ 
+El quinto experimento introduce una penalización adaptativa por ir a C en función
+del nivel de batería en el momento de la visita. La hipótesis es que penalizar más
+severamente las visitas a C cuando la batería está alta y menos cuando está baja
+permitirá al agente aprender que recargar con batería alta es ineficiente, mientras
+que recargar con batería baja es casi obligatorio.
+ 
+La estructura de penalización es la siguiente: batería superior al 70%, penalización
+de -0.4; batería entre el 40% y el 70%, penalización de -0.2; batería igual o
+inferior al 40%, penalización de -0.05. El resto de la función de recompensa se
+mantiene igual que en exp_004.
+ 
+Los resultados representan una mejora significativa respecto a todos los experimentos
+anteriores. La cobertura completa es del 100% con cero agotamientos de batería,
+satisfaciendo el bloque A. El tiempo en C desciende al 29.7%, las cargas medias bajan
+a 10.10 y la recompensa por paso media sube a 0.365. La batería media al recargar es
+del 87.3%, lo que indica que el agente sigue recargando principalmente con batería
+alta, aunque ya existe variabilidad: el percentil 10 de batería mínima es del 27%,
+mostrando que en algunos episodios el agente gestiona la energía de forma más
+ajustada. El desbalance entre habitaciones presenta una desviación típica media de
+1.61 y un rango medio de 3.75.
+ 
+[FIGURA: prob_recharge_by_battery_bin.png — exp_005]
+[FIGURA: hist_min_battery.png — exp_005]
+ 
+ 
+5.4.2 exp_006: penalización por sobrerrepresentación de habitación
+ 
+El sexto experimento parte de exp_005 y añade una penalización adicional de -0.2
+cuando el agente visita una habitación cuyo contador de visitas supera en más de una
+unidad la media de las tres habitaciones. El objetivo es reducir el sesgo sistemático
+que exp_005 mostraba hacia Hab3, que acumulaba más visitas que las otras dos de forma
+consistente.
+ 
+Los resultados confirman la hipótesis: el desbalance medio desciende a 1.29 de
+desviación típica y 2.98 de rango, ambos por debajo de los objetivos del bloque C.
+El tiempo en C se reduce adicionalmente al 26.0% y el paso medio de cobertura
+completa baja a 3.7, lo que indica que el agente visita las tres habitaciones muy
+rápidamente al inicio de cada episodio. La recompensa por paso media sube a 0.378.
+Sin embargo, la batería media al recargar es del 98.1% y el percentil 10 de batería
+mínima es del 39%, lo que indica que la gestión energética sigue siendo conservadora.
+ 
+[FIGURA: balance_habs.png — exp_006]
+[FIGURA: hist_room_std.png — exp_006]
+ 
+ 
+5.4.3 exp_007: endurecimiento del umbral de penalización adaptativa
+ 
+El séptimo experimento endurece la penalización para visitas a C con batería alta,
+elevando el umbral de penalización fuerte al 85% y subiendo la penalización a -0.6
+para ese rango. El objetivo es forzar al agente a retrasar aún más las visitas a C,
+lo que debería reducir el tiempo en C y el número de cargas sin comprometer la
+seguridad energética.
+ 
+Los resultados muestran que el experimento logra su objetivo en las métricas de
+eficiencia: el tiempo en C desciende al 27.0%, las cargas medias bajan a 11.00 y el
+paso medio de cobertura completa es de 3.7. El balance de habitaciones se mantiene
+estable con desviación típica de 1.30 y rango de 3.00. Sin embargo, la batería media
+al recargar es del 98.0% y el percentil 10 de batería mínima sube al 98%, lo que
+indica que el agente ha aprendido a recargar únicamente cuando la batería está casi
+llena. Este resultado sugiere que endurecer la penalización a niveles muy altos no
+conduce a una gestión energética más realista, sino a un patrón de recarga igualmente
+artificial pero en sentido contrario.
+ 
+[FIGURA: prob_recharge_by_battery_bin.png — exp_007]
+[FIGURA: hist_min_battery.png — exp_007]
+ 
+ 
+5.4.4 exp_008: penalización fija revisada
+ 
+El octavo experimento elimina la penalización adaptativa y sustituye todas las
+variantes por una penalización fija de -0.2 por visitar C, independientemente del
+nivel de batería. La hipótesis es verificar si el agente puede aprender a gestionar
+la energía de forma adecuada sin información explícita sobre el nivel de batería en
+la señal de recompensa, confiando únicamente en la observación del nivel de batería
+para decidir cuándo recargar.
+ 
+Los resultados muestran que la cobertura completa se mantiene al 100% con cero
+agotamientos, pero el tiempo en C sube al 38.4% y las cargas medias aumentan a 14.50
+respecto a los experimentos con penalización adaptativa. La recompensa por paso media
+es de 0.333 y el balance de habitaciones empeora ligeramente con una desviación
+típica de 1.84. La batería media al recargar es del 99.9%, confirmando que sin
+información adaptativa en la recompensa el agente no aprende a distinguir cuándo es
+apropiado recargar.
+ 
+[FIGURA: balance_habs.png — exp_008]
+ 
+ 
+5.5 Comparativa final
+----------------------
+La siguiente tabla resume las métricas clave de los ocho experimentos evaluados sobre
+500 episodios con política determinista.
+ 
+Experimento              | Cob.100% | Bat.0 | T.en C | Cargas | R/paso | Std  | Rango
+-------------------------|----------|-------|--------|--------|--------|------|------
+exp_001_remake           |    0%    |   0   | 100%   |  1.00  | 0.000  | 0.00 |  0.00
+exp_002                  |    0%    |   0   | 67.9%  | 13.31  | 0.320  | 4.89 | 11.71
+exp_003                  |  100%    |   0   | 48.4%  | 16.25  | 0.514  | 1.97 |  4.58
+exp_004                  |  100%    |   0   | 51.2%  | 18.03  | 0.270  | 1.29 |  2.99
+exp_005                  |  100%    |   0   | 29.7%  | 10.10  | 0.365  | 1.61 |  3.75
+exp_006                  |  100%    |   0   | 26.0%  | 11.84  | 0.378  | 1.29 |  2.98
+exp_007                  |  100%    |   0   | 27.0%  | 11.00  | 0.323  | 1.30 |  3.00
+exp_008                  |  100%    |   0   | 38.4%  | 14.50  | 0.333  | 1.84 |  4.28
+ 
+Los experimentos exp_001 y exp_002 no consiguen cobertura completa, lo que los
+descalifica directamente. A partir de exp_003 la cobertura es del 100% en todos los
+casos, pero el problema pasa a ser la eficiencia energética y el balance. La
+introducción de penalización adaptativa en exp_005 marca el salto cualitativo más
+importante, reduciendo el tiempo en C del 51% al 30% respecto a exp_004. Los
+experimentos exp_006 y exp_007 refinan el balance entre habitaciones y la eficiencia
+de carga, siendo exp_006 el que mejor equilibra todas las métricas simultáneamente.
+El experimento exp_008 confirma que eliminar la adaptatividad de la penalización
+empeora la gestión energética a pesar de mantener la cobertura completa.
+ 
+[PENDIENTE: secciones 5.6 en adelante con experimentos adicionales]
+ 
+ 
+================================================================================
+CAPÍTULO 6 — CONCLUSIONES Y LÍNEAS FUTURAS (ESBOZO)
+================================================================================
+ 
+6.1 Conclusiones
+-----------------
+[PENDIENTE — se redactará al finalizar todos los experimentos]
+ 
+Contenido previsto:
+- Resumen del problema abordado y el enfoque adoptado.
+- Conclusiones sobre la evolución del diseño de recompensa: qué funcionó y por qué.
+- Valoración del cumplimiento de los objetivos del capítulo 1.
+- Reflexión sobre el papel de la función de recompensa como elemento central del
+  comportamiento emergente del agente.
+- Valoración de CoppeliaSim y Stable-Baselines3 como herramientas para este tipo
+  de proyectos.
+ 
+ 
+6.2 Líneas futuras
+-------------------
+[PENDIENTE — se redactará al finalizar todos los experimentos]
+ 
+Contenido previsto:
+- Ajuste automático de hiperparámetros de PPO.
+- Evaluación con múltiples semillas para mayor robustez estadística.
+- Extensión del entorno a mapas más complejos con más habitaciones o topología
+  variable.
+- Incorporación de incertidumbre en el modelo de batería.
+- Comparativa con otros algoritmos como A2C o SAC adaptado a acciones discretas.
+- Transferencia de la política aprendida a un robot real o a un simulador de mayor
+  fidelidad.
+ 
+ 
+================================================================================
+BIBLIOGRAFÍA (PENDIENTE)
+================================================================================
+ 
+[Se completará al finalizar la redacción. Referencias previstas:]
+ 
+- Schulman, J. et al. (2017). Proximal Policy Optimization Algorithms. arXiv:1707.06347.
+- Sutton, R. S., & Barto, A. G. (2018). Reinforcement Learning: An Introduction. MIT Press.
+- Chevaleyre, Y. (2004). Theoretical analysis of the multi-agent patrolling problem.
+- Huang, et al. (2019). [referencia completa pendiente]
+- Notomista, et al. (2020). [referencia completa pendiente]
+- Documentación oficial de Stable-Baselines3, Gymnasium, CoppeliaSim.
+ 
+ 
+================================================================================
+APÉNDICE I — MANUAL DE INSTALACIÓN Y USO (ESBOZO)
+================================================================================
+ 
+[PENDIENTE — contenido previsto:]
+ 
+A.1 Requisitos software
+  - Python 3.10 o superior
+  - CoppeliaSim EduVersion
+  - Dependencias Python (ver auxiliares/requirements.txt)
+ 
+A.2 Instalación paso a paso
+  - Creación del entorno virtual
+  - Instalación de dependencias con pip
+  - Alternativa con Conda
+ 
+A.3 Preparación de CoppeliaSim
+  - Carga del fichero entornoRobotVigilancia.ttt
+  - Verificación del script Lua en el robot Pioneer
+  - Comprobación de nodos y paths en la escena
+ 
+A.4 Ejecución del entrenamiento
+  - Configuración de EXP_NAME y parámetros en train.py
+  - Lanzamiento del entrenamiento
+  - Monitorización con TensorBoard
+ 
+A.5 Ejecución de la evaluación
+  - Evaluación rápida con evaluate.py
+  - Evaluación profunda con evaluate_deep.py
+ 
+A.6 Problemas frecuentes y soluciones
+  - Modelo no encontrado
+  - No conecta con CoppeliaSim
+  - Scripts .bat no arrancan la simulación
+ 
+ 
+================================================================================
+APÉNDICE II — ESTRUCTURA DEL REPOSITORIO (ESBOZO)
+================================================================================
+ 
+[PENDIENTE — contenido previsto:]
+ 
+B.1 Árbol de directorios comentado
+ 
+B.2 Descripción de ficheros principales
+  - robot_env.py: entorno Gymnasium
+  - train.py: script de entrenamiento PPO
+  - evaluate.py: evaluación rápida
+  - evaluate_deep.py: evaluación profunda con métricas estadísticas
+  - script pioneer.lua: control del robot en CoppeliaSim
+ 
+B.3 Formato de la carpeta de experimento
+  - model/ppo_robot.zip
+  - train_logs/
+  - deep_evaluation/deepevaluation_resultsv3.csv
+  - deep_evaluation/plotsv3/
+  - descripcion.txt
+ 
+ 
+================================================================================
+ANÁLISIS DE EXTENSIÓN — ESTADO ACTUAL Y PROYECCIÓN FINAL
+================================================================================
+ 
+ESTADO ACTUAL (8 experimentos, sin figuras, sin conclusiones):
+---------------------------------------------------------------
+  Capítulo 1 — Introducción          ~  2 páginas
+  Capítulo 2 — Estado del arte       ~  6 páginas
+  Capítulo 3 — Diseño del sistema    ~  7 páginas
+  Capítulo 4 — Metodología           ~  4 páginas
+  Capítulo 5 — Experimentos (8 exp)  ~ 10 páginas
+  -----------------------------------------------
+  TOTAL cuerpo redactado             ~ 29 páginas
+ 
+PENDIENTE DE AÑADIR:
+--------------------
+  Figuras (capturas CoppeliaSim, gráficas evaluación, diagramas)  +4-6 páginas
+  Experimentos adicionales (nuevos bloques)                        +4-8 páginas
+  Capítulo 6 — Conclusiones y líneas futuras                       +3-4 páginas
+  Resumen / Abstract                                               +1 página
+  Bibliografía                                                     +1-2 páginas
+  Apéndice I — Manual de instalación                               +2-3 páginas
+  Apéndice II — Estructura del repositorio                         +1-2 páginas
+  -----------------------------------------------
+  TOTAL estimado final               ~ 45-55 páginas
+ 
+VALORACIÓN:
+-----------
+La memoria está dentro del rango recomendado por la normativa (30-50 páginas de
+cuerpo). Con los experimentos adicionales y las figuras, se situará en el límite
+superior o ligeramente por encima, lo cual es apropiado para un TFG con una
+componente experimental amplia.
+ 
+El capítulo 5 es el que más crecerá. Cada nuevo bloque de experimentos con un
+objetivo diferente aportará aproximadamente 2-4 páginas adicionales dependiendo
+del número de variantes y la profundidad del análisis.
+ 
+El capítulo 2 podría ampliarse si se quiere dar más peso teórico a PPO (función
+objetivo recortada, detalles del algoritmo actor-crítico). Actualmente está en
+el nivel equilibrado acordado.
+ 
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================
