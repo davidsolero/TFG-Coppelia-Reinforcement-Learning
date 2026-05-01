@@ -50,6 +50,7 @@ NODE_TO_IDX = {
 
 ROOM_NODES = ['Hab1', 'Hab2', 'Hab3']  # Nodos con recompensa de visita
 ALL_NODES = ['Hab1', 'Hab2', 'Hab3', 'C']  # Todos los nodos visitables
+C_PENALTY_COEFF = 50  # Coeficiente de penalización cuadrática para uso de C (exp_012: 50, exp_011: 10)
 
 
 class RobotCoppeliaSim:
@@ -249,4 +250,4 @@ class RobotEnv(gym.Env):
             return 0.0
 
         c_frequency = float(self._visit_counts['C']) / all_visits
-        return float(-10.0 * (c_frequency ** 2))
+        return float(-C_PENALTY_COEFF * (c_frequency ** 2))
