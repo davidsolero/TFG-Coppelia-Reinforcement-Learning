@@ -725,15 +725,37 @@ function actionStop(duration)
     setStatus('stopped')
     
     local endTime = sim.getSimulationTime() + duration
-    
+
+    -- Store current robot pose and hold it during the stop to avoid sliding
+    local stopPos = sim.getObjectPosition(robot, -1)
+    local stopOrient = sim.getObjectOrientation(robot, -1)
+
+    -- Build quaternion for objectToFollowPath if available
+    local yaw = stopOrient[3]
+    local cy = math.cos(yaw*0.5)
+    local sy = math.sin(yaw*0.5)
+    local stopQuat = {0,0,sy,cy}
+
     while sim.getSimulationTime() < endTime and not sim.getSimulationStopping() and isBatteryOk() do
         local now = sim.getSimulationTime()
         local dt = now - previousSimulationTime
         previousSimulationTime = now
-        
+
         updateBattery(dt)
         tryRecharge()
         publishState()
+
+        -- Keep robot static by reapplying the saved pose each step
+        sim.setObjectPosition(robot, -1, stopPos)
+        sim.setObjectOrientation(robot, -1, stopOrient)
+
+        if objectToFollowPath then
+            pcall(function()
+                sim.setObjectPosition(objectToFollowPath, -1, stopPos)
+                sim.setObjectQuaternion(objectToFollowPath, -1, stopQuat)
+            end)
+        end
+
         sim.step()
     end
     
