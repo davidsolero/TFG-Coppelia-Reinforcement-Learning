@@ -1,0 +1,60 @@
+Experimento: exp_013_HybridStopAction
+=====================================
+
+Objetivo:
+---------
+Probar una política híbrida para el robot de vigilancia en la que el agente no solo
+elige el destino de navegación, sino también si debe realizar una parada controlada
+y durante cuántos segundos debe detenerse.
+
+Este experimento extiende la formulación anterior con una acción especial de parada
+(stop), manteniendo las acciones de navegación a Hab1, Hab2, Hab3 y C.
+
+Espacio de acciones:
+--------------------
+Se usa un espacio MultiDiscrete([5, 51]):
+
+  action[0] (tipo de acción):
+    0 -> goTo:Hab1
+    1 -> goTo:Hab2
+    2 -> goTo:Hab3
+    3 -> goTo:C
+    4 -> stop
+
+  action[1] (duración de la parada):
+    0-50 segundos
+    - Solo tiene efecto si action[0] == 4
+    - Si la acción no es stop, este valor se ignora
+
+Cambios introducidos en la simulación:
+--------------------------------------
+- La acción stop ya está implementada en el script Lua del robot.
+- Durante stop, el robot mantiene su pose para evitar deslizamiento residual.
+- El entorno espera a que el stop finalice antes de devolver la transición.
+- Se añade trazabilidad de la última acción en info:
+  - last_action_type
+  - last_action_name
+  - last_stop_duration
+  - last_action_timed_out
+  - last_action_final_status
+
+Motivación:
+-----------
+- Permitir que el agente aprenda cuándo conviene pausar la patrulla.
+- Dejar que el algoritmo decida tanto la acción discreta como la duración de la parada.
+- Analizar si las pausas ayudan a estabilizar la política o a gestionar mejor la batería.
+- Mantener la compatibilidad con la navegación clásica mientras se amplía la expresividad
+  de la política.
+
+Riesgos y observaciones:
+------------------------
+- Este cambio hace que cada paso de entrenamiento/evaluación pueda tardar más tiempo real,
+  porque una acción stop bloquea hasta completarse.
+- Para estudiar el comportamiento, es importante revisar las métricas nuevas en info y los logs.
+- El modelo anterior no es compatible con este espacio de acciones y requiere reentrenamiento.
+
+Relación con evaluacion:
+------------------------
+- train.py debe entrenar desde cero con este nuevo espacio de acciones.
+- evaluate.py y evaluate_deep.py deben cargar el nuevo modelo entrenado para esta variante.
+- test_episodes.py sirve como prueba rápida para validar que stop funciona antes del entrenamiento.

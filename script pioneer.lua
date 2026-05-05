@@ -19,10 +19,10 @@ CONFIGURATION PARAMETERS
 --]]
 
 local CONFIG = {
-    --VELOCITY = 0.5,       -- Velocidades normales
-    --ANGULAR_VELOCITY = 1.57,  
-    VELOCITY = 2.0,        -- x4 m?s r?pido
-    ANGULAR_VELOCITY = 6.0, -- x4 m?s r?pido
+    VELOCITY = 0.5,       -- Velocidades normales
+    ANGULAR_VELOCITY = 1.57,  
+    --VELOCITY = 2.0,        -- x4 m?s r?pido
+    --ANGULAR_VELOCITY = 6.0, -- x4 m?s r?pido
     
     RECHARGE_RADIUS = 0.5,
     REALIGN_THRESHOLD = 0.05,

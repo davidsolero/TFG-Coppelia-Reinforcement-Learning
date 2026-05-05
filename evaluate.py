@@ -33,7 +33,7 @@ def safe_ratio(numerator, denominator):
     return float(numerator) / float(denominator) if denominator else 0.0
 
 # ── Configuración de experimento ──────────────────────────────────────────────
-EXP_NAME = "exp_012_DispersaConPenalCuadratica50"  # Debe coincidir con train.py
+EXP_NAME = "exp_013_HibridoAccionStop"  # Debe coincidir con train.py
 PROJECT_DIR = Path(__file__).resolve().parent
 BASE_DIR = PROJECT_DIR / "experiments" / EXP_NAME
 
@@ -101,13 +101,15 @@ for ep in range(NUM_EPISODES):
     while True:
         # Acción determinista: el agente elige lo que aprendió, sin ruido
         action, _ = model.predict(obs, deterministic=True)
-        obs, reward, terminated, truncated, info = env.step(int(action))
+        obs, reward, terminated, truncated, info = env.step(action)
 
         ep_reward += reward
         ep_steps  += 1
 
         node = info['node']
         battery = info['battery']
+        last_action_name = info.get('last_action_name', 'unknown')
+        last_stop_duration = info.get('last_stop_duration', 0)
 
         # Registrar visitas a habitaciones
         if node in ['Hab1', 'Hab2', 'Hab3']:
@@ -128,8 +130,10 @@ for ep in range(NUM_EPISODES):
 
         prev_node = node
 
-        print(f"  Paso {ep_steps:2d}: nodo={node:4s}  batería={battery:5.1f}%  "
+        print(f"  Paso {ep_steps:2d}: acción={last_action_name:5s}  nodo={node:4s}  batería={battery:5.1f}%  "
               f"reward={reward:+.1f}  acum={ep_reward:.1f}")
+        if last_action_name == 'stop':
+            print(f"           [Stop {last_stop_duration}s]")
 
         if terminated:
             depleted = True

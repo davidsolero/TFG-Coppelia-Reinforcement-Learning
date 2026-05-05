@@ -102,8 +102,16 @@ def run_episode(robot, episode_num, max_actions=10):
     time.sleep(0.2)
     robot.print_state()
     
-    # Acciones disponibles
-    actions = ['Hab1', 'Hab2', 'Hab3', 'C']
+    # Mapeo de acciones híbridas: [action_type, duration]
+    # action_type: 0=Hab1, 1=Hab2, 2=Hab3, 3=C, 4=stop
+    # duration: 0-50 segundos (solo se usa si action_type == 4)
+    action_types = {0: 'Hab1', 1: 'Hab2', 2: 'Hab3', 3: 'C', 4: 'stop'}
+    
+    # Acciones disponibles (combinación de tipo y duración)
+    actions = [
+        [0, 0], [1, 0], [2, 0], [3, 0],  # Navegación a nodos
+        [4, random.randint(1, 50)]       # Stop con duración aleatoria
+    ]
     
     # Contadores del episodio
     actions_taken = 0
@@ -113,10 +121,16 @@ def run_episode(robot, episode_num, max_actions=10):
     for step in range(max_actions):
         state = robot.get_state()
         
-        # Elegir acción (por ahora aleatoria)
+        # Elegir acción hybrid aleatoria: [tipo, duración]
         action = random.choice(actions)
-        
-        print(f"\n  Paso {step + 1}/{max_actions}: Ir a {action}")
+        action_type = action[0]
+        stop_duration = action[1] if len(action) > 1 else 0
+        action_name = action_types.get(action_type, 'unknown')
+
+        if action_name == 'stop':
+            print(f"\n  Paso {step + 1}/{max_actions}: Stop {stop_duration}s")
+        else:
+            print(f"\n  Paso {step + 1}/{max_actions}: Ir a {action_name}")
         
         # Si batería agotada, llamar operario
         if state['depleted']:
@@ -127,13 +141,21 @@ def run_episode(robot, episode_num, max_actions=10):
             robot.print_state()
             continue
         
-        # Ejecutar acción
-        robot.go_to(action)
-        final_state = robot.wait_for_status(['arrived', 'idle', 'error', 'depleted'], timeout=120)
+        # Ejecutar acción hybrid
+        if action_name == 'stop':
+            robot.stop(stop_duration)
+            # Confirmación: esperar a que el Lua ponga 'stopped' (acepta el comando)
+            robot.wait_for_status(['stopped'], timeout=5)
+            # Esperar a que termine la parada y vuelva a 'idle' (o a 'error'/'depleted')
+            stop_timeout = (stop_duration + 10) if stop_duration else 30
+            final_state = robot.wait_for_status(['idle', 'error', 'depleted'], timeout=stop_timeout)
+        else:
+            robot.go_to(action_name)
+            final_state = robot.wait_for_status(['arrived', 'idle', 'error', 'depleted'], timeout=120)
         
         actions_taken += 1
-        if action in ['Hab1', 'Hab2', 'Hab3']:
-            rooms_visited.append(action)
+        if action_name in ['Hab1', 'Hab2', 'Hab3']:
+            rooms_visited.append(action_name)
         
         robot.print_state()
         
@@ -165,8 +187,8 @@ def main():
     print("TEST DE MÚLTIPLES EPISODIOS")
     print("="*60)
     
-    num_episodes = 3
-    max_actions_per_episode = 8
+    num_episodes = 4
+    max_actions_per_episode = 50
     
     results = []
     

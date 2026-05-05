@@ -1,0 +1,40 @@
+Experimento: exp_014_StopVelocidadNormal
+========================================
+
+Objetivo:
+---------
+Evaluar la misma formulación de acciones de exp_013, pero con la velocidad normal
+original del Pioneer, para comprobar si el robot empieza a utilizar la acción stop
+cuando el coste temporal de navegar es mayor y la batería entra en presión real.
+
+Este experimento es una variación directa de exp_013. Mantiene la acción stop y la
+misma lógica de parada controlada, pero cambia el ritmo de movimiento para hacer
+más coherente la comparación entre navegar y detenerse.
+
+Cambios respecto a exp_013:
+----------------------------
+- VELOCITY restaurada a 0.5 m/s.
+- ANGULAR_VELOCITY restaurada a 1.57 rad/s.
+- Se mantiene el espacio MultiDiscrete([5, 51]).
+- Se mantiene la acción stop con duración seleccionable.
+- Se mantiene la instrumentación de trazabilidad en info.
+
+Hipótesis:
+----------
+- Con una velocidad más realista, las rutas tardan más y el episodio consume más tiempo.
+- La batería debería entrar antes en la fase de caída.
+- Stop pasa a ser una acción potencialmente útil para gestionar tiempo y batería.
+- El agente tiene más incentivo para diferenciar entre navegar y pausar.
+
+Relación con exp_013:
+---------------------
+- exp_013 validó que stop funciona a nivel técnico.
+- exp_014 no cambia la acción, sino el contexto temporal en el que esa acción compite.
+- Esta versión sirve para comprobar si la parada aparece como una decisión útil cuando
+  la velocidad deja de ser artificialmente alta.
+
+Notas:
+------
+- El modelo requiere reentrenamiento desde cero.
+- La evaluación debe revisarse con los logs extendidos para ver la acción elegida en cada paso.
+- Si stop sigue sin aparecer, la causa probable será de diseño de recompensa y no de implementación.

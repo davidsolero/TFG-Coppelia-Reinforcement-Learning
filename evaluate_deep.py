@@ -39,7 +39,7 @@ def percentiles(values):
     return np.percentile(array, [10, 50, 90])
 
 # ── Configuración de experimento ───────────────────────────────────────────────
-EXP_NAME = "exp_011_DispersaConPenalCuadratica"  # Debe coincidir con train.py
+EXP_NAME = "exp_013_HibridoAccionStop"  # Debe coincidir con train.py
 BASE_DIR = f"./experiments/{EXP_NAME}"
 os.makedirs(f"{BASE_DIR}/deep_evaluation", exist_ok=True)
 PLOTS_DIR = f"{BASE_DIR}/deep_evaluation/plotsv3"
@@ -139,10 +139,12 @@ for ep in tqdm(range(NUM_EPISODES), desc="Episodios evaluados"):
 
     while True:
         action, _ = model.predict(obs, deterministic=True)
-        obs, reward, terminated, truncated, info = env.step(int(action))
+        obs, reward, terminated, truncated, info = env.step(action)
 
         node = info['node']
         battery = info['battery']
+        last_action_name = info.get('last_action_name', 'unknown')
+        last_stop_duration = info.get('last_stop_duration', 0)
 
         ep_reward += reward
         ep_steps += 1
@@ -174,7 +176,10 @@ for ep in tqdm(range(NUM_EPISODES), desc="Episodios evaluados"):
         prev_battery = float(battery)
 
         if VERBOSE:
-            print(f"[{ep}] Paso {ep_steps}: {node}, bat={battery:.1f}")
+            if last_action_name == 'stop':
+                print(f"[{ep}] Paso {ep_steps}: {last_action_name} {last_stop_duration}s, nodo={node}, bat={battery:.1f}")
+            else:
+                print(f"[{ep}] Paso {ep_steps}: {last_action_name}, nodo={node}, bat={battery:.1f}")
 
         if terminated:
             battery_depletions += 1

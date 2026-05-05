@@ -11,11 +11,15 @@ Observación:
     - visitas_hab3  : entero
     - visitas_c     : entero
 
-Acciones (Discrete(4)):
-    0 -> goTo:Hab1
-    1 -> goTo:Hab2
-    2 -> goTo:Hab3
-    3 -> goTo:C
+Acciones (MultiDiscrete([5, 51])):
+    action[0] (tipo de acción):
+        0 -> goTo:Hab1
+        1 -> goTo:Hab2
+        2 -> goTo:Hab3
+        3 -> goTo:C
+        4 -> stop (duración en action[1])
+    action[1] (duración si es stop):
+        0-50 segundos (ignorado si acción != 4)
 
 Recompensa:
     - exp_011 (dispersa con C): recompensa 0.0 en pasos intermedios.
@@ -31,12 +35,13 @@ import time
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 
 
-# Mapeo acción (entero) -> nodo destino
+# Mapeo acción (entero) -> nodo destino o acción especial
 ACTION_TO_NODE = {
     0: 'Hab1',
     1: 'Hab2',
     2: 'Hab3',
-    3: 'C'
+    3: 'C',
+    4: 'stop'  # Acción especial: parada
 }
 
 # Mapeo nodo -> entero para la observación (R excluido, el agente no vuelve ahí)
@@ -108,6 +113,15 @@ class RobotCoppeliaSim:
         self.send_command(f'goTo:{node}')
         return self.wait_for_status(['arrived', 'idle', 'error', 'depleted'], timeout=120)
 
+    def stop(self, duration):
+        """Pausa el robot durante duration segundos."""
+        self.send_command(f'stop:{duration}')
+        # Confirmación: esperar a 'stopped' (acepta comando)
+        self.wait_for_status(['stopped'], timeout=5)
+        # Esperar a que termine la parada y vuelva a 'idle'
+        stop_timeout = (duration + 10) if duration else 30
+        return self.wait_for_status(['idle', 'error', 'depleted'], timeout=stop_timeout)
+
     def stop_simulation(self):
         self._sim.stopSimulation()
 
@@ -131,8 +145,10 @@ class RobotEnv(gym.Env):
         )
         print("Observation space: {}".format(self.observation_space))
 
-        # Espacio de acciones: 4 destinos posibles
-        self.action_space = gym.spaces.Discrete(4)
+        # Espacio de acciones: MultiDiscrete([5, 51])
+        # Componente 0: acción (0=Hab1, 1=Hab2, 2=Hab3, 3=C, 4=stop)
+        # Componente 1: duración en segundos si es stop (0-50)
+        self.action_space = gym.spaces.MultiDiscrete([5, 51])
         print("Action space: {}".format(self.action_space))
 
         # Parámetros del episodio
@@ -144,6 +160,11 @@ class RobotEnv(gym.Env):
         self._numstepsinepisode = 0
         self._accreward         = 0.0
         self._visit_counts      = {node: 0 for node in ALL_NODES}
+        self._last_action_type  = None
+        self._last_action_name  = 'reset'
+        self._last_stop_duration = 0
+        self._last_action_timed_out = False
+        self._last_action_final_status = 'idle'
 
         # Conexión con CoppeliaSim
         self._robot = RobotCoppeliaSim()
@@ -158,6 +179,11 @@ class RobotEnv(gym.Env):
         self._numstepsinepisode = 0
         self._accreward = 0.0
         self._visit_counts = {node: 0 for node in ALL_NODES}
+        self._last_action_type  = None
+        self._last_action_name  = 'reset'
+        self._last_stop_duration = 0
+        self._last_action_timed_out = False
+        self._last_action_final_status = 'idle'
 
         self._robot.reset()
 
@@ -174,13 +200,31 @@ class RobotEnv(gym.Env):
         truncated  = False
         reward     = 0.0
 
-        target_node = ACTION_TO_NODE[action]
+        # Desempacar acción hybrid: [acción_tipo, duración]
+        action_type = int(action[0])
+        stop_duration = int(action[1]) if len(action) > 1 else 0
+
+        action_name = ACTION_TO_NODE.get(action_type, 'unknown')
+        self._last_action_type = action_type
+        self._last_action_name = action_name
+        self._last_stop_duration = stop_duration if action_name == 'stop' else 0
 
         if self._trace:
-            print(f"\tAction: {action} -> goTo:{target_node}")
+            if action_name == 'stop':
+                print(f"\tAction: {action_type} -> stop:{stop_duration}s")
+            else:
+                print(f"\tAction: {action_type} -> goTo:{action_name}")
 
         # Ejecutar acción en Coppelia y esperar resultado
-        final_state = self._robot.go_to(target_node)
+        if action_name == 'stop':
+            final_state = self._robot.stop(stop_duration)
+            expected_statuses = ['idle', 'error', 'depleted']
+        else:
+            final_state = self._robot.go_to(action_name)
+            expected_statuses = ['arrived', 'idle', 'error', 'depleted']
+
+        self._last_action_final_status = final_state['status']
+        self._last_action_timed_out = final_state['status'] not in expected_statuses
 
         # --- Calcular recompensa ---
 
@@ -188,7 +232,9 @@ class RobotEnv(gym.Env):
             reward     = -10.0
             terminated = True
         else:
-            self._visit_counts[target_node] += 1
+            # Solo contar visitas a nodos, no a 'stop'
+            if action_name != 'stop':
+                self._visit_counts[action_name] += 1
 
         self._numstepsinepisode += 1
         if (not terminated) and self._numstepsinepisode >= self._max_steps:
@@ -222,6 +268,11 @@ class RobotEnv(gym.Env):
             'node':       state['node'],
             'battery':    float(state['battery']),
             'acc_reward': float(self._accreward),
+            'last_action_type': self._last_action_type,
+            'last_action_name': self._last_action_name,
+            'last_stop_duration': int(self._last_stop_duration),
+            'last_action_timed_out': bool(self._last_action_timed_out),
+            'last_action_final_status': self._last_action_final_status,
         }
 
     def _room_balance_reward(self):
