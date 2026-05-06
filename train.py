@@ -15,13 +15,13 @@ from robot_env import RobotEnv
 import os
 
 # ── Configuración de experimento ───────────────────────────────────────────────
-EXP_NAME = "exp_013_HibridoAccionStop"  # Cambiar por nombre único de experimento
+EXP_NAME = "exp_014_StopVelocidadNormal"  # Cambiar por nombre único de experimento
 BASE_DIR = f"./experiments/{EXP_NAME}"
 os.makedirs(f"{BASE_DIR}/model", exist_ok=True)
 os.makedirs(f"{BASE_DIR}/train_logs", exist_ok=True)
 
 # Si existe un modelo previo, se reanuda el entrenamiento en lugar de empezar de cero.
-RESUME_TRAINING = True  # Cambiar a True para continuar desde un modelo guardado (si existe)
+RESUME_TRAINING = False  # Cambiar a True para continuar desde un modelo guardado (si existe)
 
 # ── Parámetros ────────────────────────────────────────────────────────────────
 TOTAL_TIMESTEPS  = 20_480  # Pasos de entrenamiento
