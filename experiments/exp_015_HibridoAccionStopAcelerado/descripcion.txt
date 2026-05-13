@@ -1,0 +1,53 @@
+Experimento: exp_015_HibridoAccionStopAcelerado
+================================================
+
+Objetivo:
+---------
+Repetir exp_013_HibridoAccionStop con SIM_ACCELERATION=3.0 para validar que la aceleración
+temporal NO afecta el comportamiento de aprendizaje ni la convergencia del modelo.
+
+Prueba de viabilidad para usar 3x speedup en futuros entrenamientos.
+
+Configuración:
+--------------
+IDENTICA a exp_013, excepto:
+
+  Cambio único:
+    SIM_ACCELERATION = 3.0 (en script pioneer.lua CONFIG)
+    
+  Todo lo demás:
+    - Espacio de acciones: MultiDiscrete([5, 51]) (hybrid: navigation + stop)
+    - Recompensa: Dispersa final (balance habitaciones + penalizacion C cuadratica)
+    - Timesteps: 20,480
+    - Max steps/episodio: 50
+    - Bateria: plateau 20s, fall 55s, charge 20s
+
+Impacto Esperado:
+-----------------
+Tiempo real:
+  - exp_013:   ~10.4 horas
+  - exp_015:   ~4.3 horas (2.39x mas rapido)
+
+Comportamiento observable:
+  - Reward curve: IDENTICA
+  - Modelo convergence: IDENTICA o MEJOR
+  - Variabilidad: MEJOR (6.2% vs 6.7%)
+  - Errores/timeouts: CERO (tiempos escalados correctamente)
+
+Validación (este es un TEST DE REGRESION):
+-------------------------------------------
+1. Entrena sin errores de timeout/sincronizacion? -> Si = ok
+2. Reward curve similar a exp_013? -> Si = ok
+3. Tiempo total ~4.3h? -> Si = ok
+4. Modelo converge normalmente? -> Si = ok
+
+Si TODO pasa:
+  -> SIM_ACCELERATION=3 VALIDADO para uso general
+  -> Futuros entrenamientos usan 3x speedup by default
+
+Comparación vs exp_013:
+-----------------------
+Despues del training, revisar TensorBoard con ambos eventos:
+  - Mean episode reward: Debe ser practicamente identica
+  - Episode length: Debe ser identica
+  - Tiempo calendario: Debe ser ~2.39x mas rapido

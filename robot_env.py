@@ -116,8 +116,10 @@ class RobotCoppeliaSim:
     def stop(self, duration):
         """Pausa el robot durante duration segundos."""
         self.send_command(f'stop:{duration}')
-        # Confirmación: esperar a 'stopped' (acepta comando)
-        self.wait_for_status(['stopped'], timeout=5)
+        # Confirmación: en modo teleport puede pasar muy rápido a 'idle'
+        ack_state = self.wait_for_status(['stopped', 'idle', 'error', 'depleted'], timeout=5)
+        if ack_state['status'] in ['idle', 'error', 'depleted']:
+            return ack_state
         # Esperar a que termine la parada y vuelva a 'idle'
         stop_timeout = (duration + 10) if duration else 30
         return self.wait_for_status(['idle', 'error', 'depleted'], timeout=stop_timeout)

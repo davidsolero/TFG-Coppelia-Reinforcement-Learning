@@ -19,10 +19,10 @@ CONFIGURATION PARAMETERS
 --]]
 
 local CONFIG = {
-    VELOCITY = 0.5,       -- Velocidades normales
-    ANGULAR_VELOCITY = 1.57,  
-    --VELOCITY = 2.0,        -- x4 m?s r?pido
-    --ANGULAR_VELOCITY = 6.0, -- x4 m?s r?pido
+    --VELOCITY = 0.5,       -- Velocidades normales
+    --ANGULAR_VELOCITY = 1.57,  
+    VELOCITY = 2.0,        -- x4 m?s r?pido
+    ANGULAR_VELOCITY = 6.0, -- x4 m?s r?pido
     
     RECHARGE_RADIUS = 0.5,
     REALIGN_THRESHOLD = 0.05,
@@ -48,6 +48,10 @@ local CONFIG = {
     
     LOG_LEVEL = 1,
     BATTERY_REPORT_INTERVAL = 10,
+    -- Factor de aceleraci?n de tiempo en simulaci?n: 1.0 = normal, >1 acelera
+    SIM_ACCELERATION = 3.0,
+    -- Modo de movimiento: 'path' (actual) o 'teleport' (salto entre nodos)
+    MOVEMENT_MODE = 'path',
 }
 
 --[[
@@ -71,11 +75,26 @@ function sysCall_init()
     chargePhase1Duration = CONFIG.CHARGE_DURATION
     logLevel = CONFIG.LOG_LEVEL
     batteryReportInterval = CONFIG.BATTERY_REPORT_INTERVAL
+    movementMode = CONFIG.MOVEMENT_MODE or 'path'
     
     sim.setStepping(true)
 
-    -- Time tracking
-    previousSimulationTime = sim.getSimulationTime()
+    -- Time tracking (real vs virtual scaled time)
+    simAcceleration = CONFIG.SIM_ACCELERATION or 1.0
+    realPreviousSimulationTime = sim.getSimulationTime()
+    virtualTime = realPreviousSimulationTime
+
+    local function getScaledDt()
+        local realNow = sim.getSimulationTime()
+        local realDt = realNow - realPreviousSimulationTime
+        realPreviousSimulationTime = realNow
+        local dt = realDt * simAcceleration
+        virtualTime = virtualTime + dt
+        return dt
+    end
+
+    -- expose helper globally for use in functions below
+    getScaledDt_global = getScaledDt
 
     -- Battery system
     battery = 100.0
@@ -126,6 +145,7 @@ function sysCall_init()
     sim.setStringSignal('robot_status', 'idle')
     
     logMessage(1, 'INIT', 'Robot starting at node: ' .. currentNode)
+    logMessage(1, 'INIT', 'Movement mode: ' .. movementMode)
     logMessage(1, 'INIT', 'Waiting for Python commands...')
 end
 
@@ -135,7 +155,7 @@ end
 
 function logMessage(level, category, message)
     if level <= logLevel then
-        local timeStr = string.format('[%.1fs]', sim.getSimulationTime())
+        local timeStr = string.format('[%.1fs]', (virtualTime or sim.getSimulationTime()))
         local prefix = ''
         
         if category == 'ERROR' then
@@ -225,8 +245,9 @@ function resetEnvironment()
     -- Reiniciar nodo actual
     currentNode = 'R'
     
-    -- Reiniciar tiempo
-    previousSimulationTime = sim.getSimulationTime()
+    -- Reiniciar tiempo (real vs virtual)
+    realPreviousSimulationTime = sim.getSimulationTime()
+    virtualTime = realPreviousSimulationTime
     
     -- Publicar estado y marcar como listo
     publishState()
@@ -380,12 +401,11 @@ function rotateTo(targetYaw)
     local currentYaw = euler[3]
     local diff = normalizeAngle(targetYaw - currentYaw)
     
-    previousSimulationTime = sim.getSimulationTime()
-    
+    realPreviousSimulationTime = sim.getSimulationTime()
+    virtualTime = virtualTime or realPreviousSimulationTime
+
     while math.abs(diff) > 0.01 and not sim.getSimulationStopping() and isBatteryOk() do
-        local now = sim.getSimulationTime()
-        local dt = now - previousSimulationTime
-        previousSimulationTime = now
+        local dt = getScaledDt_global()
         
         updateBattery(dt)
         tryRecharge()
@@ -416,12 +436,11 @@ function moveToPosition(targetPos)
     if dist < 0.01 then return true end
     
     local travelDistance = 0
-    previousSimulationTime = sim.getSimulationTime()
-    
+    realPreviousSimulationTime = sim.getSimulationTime()
+    virtualTime = virtualTime or realPreviousSimulationTime
+
     while travelDistance < dist and not sim.getSimulationStopping() and isBatteryOk() do
-        local now = sim.getSimulationTime()
-        local dt = now - previousSimulationTime
-        previousSimulationTime = now
+        local dt = getScaledDt_global()
         
         updateBattery(dt)
         tryRecharge()
@@ -467,6 +486,29 @@ function realignToNode(nodeName)
     local nodeOrient = sim.getObjectOrientation(nodes[nodeName], -1)
     sim.setObjectOrientation(robot, -1, nodeOrient)
     
+    return true
+end
+
+function teleportToNode(nodeName)
+    if not nodes[nodeName] then return false end
+
+    local nodePos = sim.getObjectPosition(nodes[nodeName], -1)
+    local nodeOrient = sim.getObjectOrientation(nodes[nodeName], -1)
+
+    sim.setObjectPosition(robot, -1, nodePos)
+    sim.setObjectOrientation(robot, -1, nodeOrient)
+
+    if objectToFollowPath then
+        local yaw = nodeOrient[3]
+        local cy = math.cos(yaw*0.5)
+        local sy = math.sin(yaw*0.5)
+        local quat = {0, 0, sy, cy}
+        pcall(function()
+            sim.setObjectPosition(objectToFollowPath, -1, nodePos)
+            sim.setObjectQuaternion(objectToFollowPath, -1, quat)
+        end)
+    end
+
     return true
 end
 
@@ -523,12 +565,11 @@ function followPath(pathName)
 
     local pathLengths, totalLength = sim.getPathLengths(pathPositions, 3)
     local posAlongPath = 0
-    previousSimulationTime = sim.getSimulationTime()
+    realPreviousSimulationTime = sim.getSimulationTime()
+    virtualTime = virtualTime or realPreviousSimulationTime
 
     while posAlongPath < totalLength and not sim.getSimulationStopping() and isBatteryOk() do
-        local t = sim.getSimulationTime()
-        local dt = t - previousSimulationTime
-        previousSimulationTime = t
+        local dt = getScaledDt_global()
 
         updateBattery(dt)
         tryRecharge()
@@ -667,6 +708,52 @@ function goTo(targetNode)
     end
     
     logMessage(1, 'NAV', 'Route: ' .. table.concat(nodePath, ' -> '))
+
+    if movementMode == 'teleport' then
+        for i = 1, #nodePath-1 do
+            if not isBatteryOk() then
+                logMessage(1, 'NAV', 'Aborted - battery depleted')
+                setStatus('depleted')
+                return false
+            end
+
+            local fromNode = nodePath[i]
+            local toNode = nodePath[i+1]
+            local pathName = graph[fromNode] and graph[fromNode][toNode]
+
+            if not pathName then
+                logMessage(0, 'ERROR', 'Path not found: ' .. fromNode .. ' -> ' .. toNode)
+                setStatus('error')
+                return false
+            end
+
+            local pathLength = getPathLength(pathName)
+            local travelDt = pathLength / math.max(velocity, 0.001)
+            virtualTime = (virtualTime or sim.getSimulationTime()) + travelDt
+            updateBattery(travelDt)
+
+            if not isBatteryOk() then
+                logMessage(1, 'NAV', 'Aborted - battery depleted during teleport travel')
+                setStatus('depleted')
+                return false
+            end
+
+            if not teleportToNode(toNode) then
+                logMessage(0, 'ERROR', 'Teleport target not found: ' .. toNode)
+                setStatus('error')
+                return false
+            end
+
+            currentNode = toNode
+            tryRecharge()
+            publishState()
+            sim.step()
+        end
+
+        logMessage(1, 'NAV', 'Arrived at ' .. targetNode .. ' (teleport mode)')
+        setStatus('arrived')
+        return true
+    end
     
     if not realignToNode(currentNode) then
         logMessage(1, 'NAV', 'Aborted during initial realignment')
@@ -724,7 +811,7 @@ function actionStop(duration)
     logMessage(1, 'ACTION', 'Stop for ' .. duration .. ' seconds')
     setStatus('stopped')
     
-    local endTime = sim.getSimulationTime() + duration
+    local endTime = (virtualTime or sim.getSimulationTime()) + duration
 
     -- Store current robot pose and hold it during the stop to avoid sliding
     local stopPos = sim.getObjectPosition(robot, -1)
@@ -736,10 +823,39 @@ function actionStop(duration)
     local sy = math.sin(yaw*0.5)
     local stopQuat = {0,0,sy,cy}
 
-    while sim.getSimulationTime() < endTime and not sim.getSimulationStopping() and isBatteryOk() do
-        local now = sim.getSimulationTime()
-        local dt = now - previousSimulationTime
-        previousSimulationTime = now
+    if movementMode == 'teleport' then
+        local jumpDt = math.max(duration, 0)
+        virtualTime = (virtualTime or sim.getSimulationTime()) + jumpDt
+        updateBattery(jumpDt)
+        tryRecharge()
+        publishState()
+
+        -- Mantener pose estable durante el salto temporal
+        sim.setObjectPosition(robot, -1, stopPos)
+        sim.setObjectOrientation(robot, -1, stopOrient)
+        if objectToFollowPath then
+            pcall(function()
+                sim.setObjectPosition(objectToFollowPath, -1, stopPos)
+                sim.setObjectQuaternion(objectToFollowPath, -1, stopQuat)
+            end)
+        end
+
+        sim.step()
+
+        if isBatteryOk() then
+            setStatus('idle')
+        else
+            setStatus('depleted')
+        end
+
+        return isBatteryOk()
+    end
+
+    realPreviousSimulationTime = sim.getSimulationTime()
+    virtualTime = virtualTime or realPreviousSimulationTime
+
+    while (virtualTime or sim.getSimulationTime()) < endTime and not sim.getSimulationStopping() and isBatteryOk() do
+        local dt = getScaledDt_global()
 
         updateBattery(dt)
         tryRecharge()
@@ -788,15 +904,14 @@ function callOperator()
     
     startCharging()
     batteryDepleted = false
-    previousSimulationTime = sim.getSimulationTime()
+    realPreviousSimulationTime = sim.getSimulationTime()
+    virtualTime = virtualTime or realPreviousSimulationTime
     
     setStatus('charging')
     logMessage(1, 'BATTERY', 'Charging until full...')
     
     while battery < 100.0 and not sim.getSimulationStopping() do
-        local now = sim.getSimulationTime()
-        local dt = now - previousSimulationTime
-        previousSimulationTime = now
+        local dt = getScaledDt_global()
         
         sim.setObjectPosition(robot, -1, chargePos)
         sim.setObjectOrientation(robot, -1, chargeOrient)
@@ -856,10 +971,8 @@ function sysCall_thread()
     logMessage(1, 'INIT', '=== WAITING FOR PYTHON COMMANDS ===')
     
     while not sim.getSimulationStopping() do
-        local now = sim.getSimulationTime()
-        local dt = now - previousSimulationTime
-        previousSimulationTime = now
-        
+        local dt = getScaledDt_global()
+
         -- Siempre actualizar bater?a y estado
         updateBattery(dt)
         tryRecharge()
