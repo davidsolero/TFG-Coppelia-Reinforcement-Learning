@@ -18,6 +18,9 @@ Cambios respecto a exp_013:
 - Se mantiene el espacio MultiDiscrete([5, 51]).
 - Se mantiene la acción stop con duración seleccionable.
 - Se mantiene la instrumentación de trazabilidad en info.
+- La descarga de batería se ajusta por fases: los primeros 20_480 pasos usan 20 s y los siguientes 20_480 pasos usan 30 s y una aceleración x3.
+- Motivo del cambio: con 20 s la curva no crece y la batería no entra en presión suficiente, así que se sube a 30 s para forzar una caída más visible y comprobar si stop empieza a ser útil.
+
 
 Hipótesis:
 ----------
@@ -38,3 +41,6 @@ Notas:
 - El modelo requiere reentrenamiento desde cero.
 - La evaluación debe revisarse con los logs extendidos para ver la acción elegida en cada paso.
 - Si stop sigue sin aparecer, la causa probable será de diseño de recompensa y no de implementación.
+
+
+- La curva sigue sin converger. Fallido
