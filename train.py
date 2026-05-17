@@ -15,16 +15,16 @@ from robot_env import RobotEnv
 import os
 
 # ── Configuración de experimento ───────────────────────────────────────────────
-EXP_NAME = "exp_015_HibridoAccionStopAcelerado"  # Cambiar por nombre único de experimento
+EXP_NAME = "exp_016_TiempoEnObservacion"  # Experimento con tiempo de episodio en la observación
 BASE_DIR = f"./experiments/{EXP_NAME}"
 os.makedirs(f"{BASE_DIR}/model", exist_ok=True)
 os.makedirs(f"{BASE_DIR}/train_logs", exist_ok=True)
 
-# Si existe un modelo previo, se reanuda el entrenamiento en lugar de empezar de cero.
-RESUME_TRAINING = True  # Cambiar a True para continuar desde un modelo guardado (si existe)
+# Al cambiar la observación (se añade tiempo_ep), se debe reentrenar desde cero.
+RESUME_TRAINING = False  # Cambiar a True solo si el modelo previo usa exactamente la misma observación
 
 # ── Parámetros ────────────────────────────────────────────────────────────────
-TOTAL_TIMESTEPS  = 20_480  # Pasos de entrenamiento
+TOTAL_TIMESTEPS  = 40_960  # Pasos de entrenamiento
 MAX_STEPS_EP     = 50       # Pasos máximos por episodio (truncation)
 LOG_DIR          = f"{BASE_DIR}/train_logs"  # Directorio para TensorBoard
 MODEL_PATH       = f"{BASE_DIR}/model/ppo_robot"  # Dónde guardar el modelo final

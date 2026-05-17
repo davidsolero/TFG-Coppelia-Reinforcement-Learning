@@ -10,6 +10,7 @@ Observación:
     - visitas_hab2  : entero
     - visitas_hab3  : entero
     - visitas_c     : entero
+    - tiempo_ep     : float 0.0-1.0 (progreso normalizado del episodio)
 
 Acciones (MultiDiscrete([5, 51])):
     action[0] (tipo de acción):
@@ -139,10 +140,10 @@ class RobotEnv(gym.Env):
     def __init__(self, max_steps=50, trace=False):
         super().__init__()
 
-        # Espacio de observación: [nodo(0-3), bateria(0-100), vis1, vis2, vis3, vis_c]
+        # Espacio de observación: [nodo(0-3), bateria(0-100), vis1, vis2, vis3, vis_c, tiempo_ep]
         self.observation_space = gym.spaces.Box(
-            low  = np.array([0,    0.0, 0, 0, 0, 0], dtype=np.float32),
-            high = np.array([3, 100.0, 999, 999, 999, 999], dtype=np.float32),
+            low  = np.array([0,    0.0, 0, 0, 0, 0, 0.0], dtype=np.float32),
+            high = np.array([3, 100.0, 999, 999, 999, 999, 1.0], dtype=np.float32),
             dtype = np.float32
         )
         print("Observation space: {}".format(self.observation_space))
@@ -261,7 +262,9 @@ class RobotEnv(gym.Env):
         node_idx = NODE_TO_IDX.get(state['node'], 3)
         battery  = float(state['battery'])
         vis = [float(self._visit_counts[node]) for node in ALL_NODES]
-        return np.array([node_idx, battery] + vis, dtype=np.float32)
+        time_progress = float(self._numstepsinepisode) / float(self._max_steps) if self._max_steps > 0 else 0.0
+        time_progress = float(np.clip(time_progress, 0.0, 1.0))
+        return np.array([node_idx, battery] + vis + [time_progress], dtype=np.float32)
 
     def _get_info(self):
         """Información auxiliar para logging."""

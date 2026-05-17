@@ -1,0 +1,53 @@
+Experimento: exp_016_TiempoEnObservacion
+========================================
+
+Objetivo:
+---------
+Incorporar información temporal explícita en el aprendizaje para que el agente
+sepa en qué punto del episodio está y pueda ajustar mejor decisiones como ir a C
+o usar stop.
+
+Este experimento se plantea como una ablación: se añade tiempo a la observación
+sin modificar la recompensa ni la acción, para aislar si esa señal temporal por
+sí sola cambia el comportamiento aprendido.
+
+Cambio principal:
+-----------------
+- Se añade `tiempo_ep` a la observación del entorno.
+- `tiempo_ep` es el progreso normalizado del episodio en rango [0, 1].
+- No se modifica la acción ni la función de recompensa en esta fase.
+
+Por qué puede cambiar el comportamiento:
+---------------------------------------
+- El agente deja de ver cada paso como un estado aislado y pasa a tener contexto
+  de fase del episodio.
+- Eso puede ayudarle a anticipar cuándo conviene terminar cobertura, ir a C o
+  usar stop.
+- También puede cambiar la política aunque la recompensa no varíe, porque la red
+  recibe más información para separar situaciones que antes parecían iguales.
+
+Notas:
+------
+- Este cambio altera el espacio de observación, por lo que el entrenamiento debe
+  iniciarse desde cero (sin reanudar pesos de experimentos anteriores).
+- El objetivo es aislar el efecto de la señal temporal antes de introducir cambios
+  adicionales en recompensa o arquitectura.
+
+    VELOCITY = 2.0,        -- x4 m?s r?pido
+    ANGULAR_VELOCITY = 6.0, -- x4 m?s r?pido
+    
+    RECHARGE_RADIUS = 0.5,
+    REALIGN_THRESHOLD = 0.05,
+    
+    -- BATER?A - TIEMPOS DE PRUEBA (para testing r?pido)
+    --DISCHARGE_PLATEAU_DURATION = 30,  -- 30 segundos de meseta
+    --DISCHARGE_FALL_DURATION = 20,     -- 20 segundos de ca?da
+    --CHARGE_DURATION = 15,             -- 15 segundos para cargar
+    
+    DISCHARGE_PLATEAU_DURATION = 20,  -- ~5 movimientos gratis
+    DISCHARGE_FALL_DURATION = 55,     -- ~13 movimientos con presi?n creciente
+    CHARGE_DURATION = 20,             -- carga relativamente r?pida
+        -- Factor de aceleraci?n de tiempo en simulaci?n: 1.0 = normal, >1 acelera
+    SIM_ACCELERATION = 3.0,
+    -- Modo de movimiento: 'path' (actual) o 'teleport' (salto entre nodos)
+    MOVEMENT_MODE = 'path',
