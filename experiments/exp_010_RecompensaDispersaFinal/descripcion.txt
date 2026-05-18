@@ -1,6 +1,7 @@
 exp_010_RecompensaDispersaFinal
 --------------------------------
 - Objetivo: evitar la inflacion de reward por acumulacion paso a paso usando una recompensa dispersa final.
+- Observacion: [nodo(0-3), bateria(0-100), vis1, vis2, vis3, vis_c].
 - Recompensa intermedia en cada step: 0.0 (salvo deplecion).
 - Si hay bateria agotada: reward = -10.0 y fin de episodio (terminated=True).
 - Si el episodio termina por truncacion (max_steps): se calcula una unica recompensa final de balance en [0, 10].

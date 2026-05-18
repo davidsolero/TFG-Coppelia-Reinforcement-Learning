@@ -4,6 +4,7 @@ Experimento: exp_011_DispersaConPenalCuadratica
 Objetivo:
 ---------
 Extender exp_010 añadiendo una penalización dispersa (final) cuadrática para el uso de C (recarga).
+Observacion: [nodo(0-3), bateria(0-100), vis1, vis2, vis3, vis_c].
 Mantener la recompensa dispersa de balance de habitaciones y combinarla con una penalidad de C.
 
 Configuración de recompensa:

@@ -4,6 +4,7 @@ Experimento: exp_016_TiempoEnObservacion
 Objetivo:
 ---------
 Incorporar información temporal explícita en el aprendizaje para que el agente
+Observacion: [nodo(0-3), bateria(0-100), vis1, vis2, vis3, vis_c, tiempo_ep(0-1)].
 sepa en qué punto del episodio está y pueda ajustar mejor decisiones como ir a C
 o usar stop.
 

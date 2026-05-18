@@ -4,6 +4,7 @@ Experimento: exp_015_HibridoAccionStopAcelerado
 Objetivo:
 ---------
 Repetir exp_013_HibridoAccionStop con SIM_ACCELERATION=3.0 para validar que la aceleración
+Observacion: [nodo(0-3), bateria(0-100), vis1, vis2, vis3, vis_c].
 temporal NO afecta el comportamiento de aprendizaje ni la convergencia del modelo.
 
 Prueba de viabilidad para usar 3x speedup en futuros entrenamientos.

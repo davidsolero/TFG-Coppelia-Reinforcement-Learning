@@ -4,6 +4,7 @@ Experimento: exp_013_HybridStopAction
 Objetivo:
 ---------
 Probar una política híbrida para el robot de vigilancia en la que el agente no solo
+Observacion: [nodo(0-3), bateria(0-100), vis1, vis2, vis3, vis_c].
 elige el destino de navegación, sino también si debe realizar una parada controlada
 y durante cuántos segundos debe detenerse.
 

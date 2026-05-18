@@ -1,6 +1,7 @@
 
 exp_001_MediaSoloHabsRemakeobs
 ----------------------------------------
+Observacion: [nodo(0-3), bateria(0-100), vis1, vis2, vis3, vis_c].
 Igual que exp001 pero con 6 observaciones
 
 Calculo de recompensa (if, bloque sustituible)

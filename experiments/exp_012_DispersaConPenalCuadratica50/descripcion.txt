@@ -4,6 +4,7 @@ Experimento: exp_012_DispersaConPenalCuadratica50
 Objetivo:
 ---------
 Versión mejorada de exp_011 con coeficiente de penalización aumentado a -50.
+Observacion: [nodo(0-3), bateria(0-100), vis1, vis2, vis3, vis_c].
 Mantener la penalización dispersa cuadrática final, pero con escalado más fuerte
 para que realmente desincentive el uso frecuente de C.
 

@@ -4,6 +4,7 @@ Experimento: exp_017_TiempoEnRecompensa
 Objetivo:
 ---------
 Evaluar si, además de aportar contexto temporal en la observación, introducir una
+Observacion: [nodo(0-3), bateria(0-100), vis1, vis2, vis3, vis_c, tiempo_ep(0-1)].
 pequeña presión temporal en la recompensa ayuda al agente a reducir el tiempo de
 cobertura sin comprometer la seguridad energética ni el balance entre habitaciones.
 

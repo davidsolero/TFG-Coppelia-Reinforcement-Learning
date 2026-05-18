@@ -1,6 +1,7 @@
 exp_009_BalanceUniformeHabs
 ---------------------------------
 - Base: misma estructura de entrenamiento que exp_008, pero cambiando la recompensa de habitaciones.
+- Observacion: [nodo(0-3), bateria(0-100), vis1, vis2, vis3, vis_c].
 - Cambio principal: sustituir la regla discreta por una recompensa densa basada en el desbalance respecto a la distribución uniforme de visitas en Hab1/Hab2/Hab3.
 - C mantiene una penalización densa proporcional a su frecuencia en el episodio, con escala base -0.2.
 - Se mantiene penalización -10 por batería agotada y fin de episodio.

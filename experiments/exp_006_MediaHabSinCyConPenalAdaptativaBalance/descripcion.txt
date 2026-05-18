@@ -1,6 +1,7 @@
 exp_006_MediaHabSinCyConPenalAdaptativaBalance
 -----------------------------------------------
 - Base: misma configuracion de exp_005 (recompensa por media de habitaciones + penalizacion adaptativa por ir a C).
+- Observacion: [nodo(0-3), bateria(0-100), vis1, vis2, vis3, vis_c].
 - Unico cambio respecto a exp_005: penalizacion adicional por sobrerrepresentacion de habitacion.
   - Si la habitacion elegida esta por encima de la media de habitaciones en mas de 1 visita, reward = -0.2.
 - Se mantiene penalizacion -10 por bateria agotada y fin de episodio.

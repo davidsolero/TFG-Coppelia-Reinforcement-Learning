@@ -1,6 +1,7 @@
 exp_007_MediaHabSinCyConPenalAdaptativaBalance85
 -------------------------------------------------
 - Base: misma configuracion que exp_006 (recompensa por media de habitaciones + penalizacion por sobrerrepresentacion de habitacion).
+- Observacion: [nodo(0-3), bateria(0-100), vis1, vis2, vis3, vis_c].
 - Cambio principal: endurecer visitas tempranas a C ajustando umbral de bateria alta y penalizacion fuerte.
   - C con bateria > 85%: reward = -0.6
   - 40% < bateria <= 85%: reward = -0.2

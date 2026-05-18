@@ -1,6 +1,7 @@
 exp_008_MediaHabSinCyConPenalFija
 ---------------------------------
 - Base: misma configuración que exp_007 (recompensa por media de habitaciones + penalización por sobrerrepresentación de habitación).
+- Observacion: [nodo(0-3), bateria(0-100), vis1, vis2, vis3, vis_c].
 - Cambio principal: remover la penalización adaptativa a batería en C, usando una penalización fija.
   - C recibe penalización constante: reward = -0.2
 - Se mantiene penalización -10 por batería agotada y fin de episodio.
