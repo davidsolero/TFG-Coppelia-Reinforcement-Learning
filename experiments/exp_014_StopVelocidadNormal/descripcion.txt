@@ -19,7 +19,8 @@ Cambios respecto a exp_013:
 - Se mantiene el espacio MultiDiscrete([5, 51]).
 - Se mantiene la acción stop con duración seleccionable.
 - Se mantiene la instrumentación de trazabilidad en info.
-- La descarga de batería se ajusta por fases: los primeros 20_480 pasos usan 20 s y los siguientes 20_480 pasos usan 30 s y una aceleración x3.
+- La descarga de batería se ajusta por fases: los primeros 20_480 pasos usan 20 s   de meseta y los siguientes 20_480 pasos usan 30 s y una aceleración x3.
+- Los siguientes 40_000 pasos usarán 80 s de meseta, 220 s de caída y 80 s de carga.
 - Motivo del cambio: con 20 s la curva no crece y la batería no entra en presión suficiente, así que se sube a 30 s para forzar una caída más visible y comprobar si stop empieza a ser útil.
 
 
