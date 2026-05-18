@@ -1,0 +1,37 @@
+Experimento: exp_017_TiempoEnRecompensa
+=======================================
+
+Objetivo:
+---------
+Evaluar si, además de aportar contexto temporal en la observación, introducir una
+pequeña presión temporal en la recompensa ayuda al agente a reducir el tiempo de
+cobertura sin comprometer la seguridad energética ni el balance entre habitaciones.
+
+Este experimento continúa exp_016 y funciona como la segunda parte de la ablación:
+- exp_016 responde a si el tiempo en la observación ya cambia el comportamiento.
+- exp_017 responde a si, además, un coste temporal suave mejora la eficiencia.
+
+Cambio principal respecto a exp_016:
+------------------------------------
+- Se mantiene `tiempo_ep` en la observación.
+- Se añade una penalización temporal pequeña por paso no terminal en la recompensa.
+- No se modifica la acción ni la estructura general del entorno.
+
+Hipótesis:
+----------
+- El agente debería tender a completar la cobertura en menos pasos.
+- La penalización temporal puede reducir esperas y paradas innecesarias.
+- Si el coste es demasiado alto, puede empeorar el balance o aumentar el riesgo energético.
+
+Criterio de diseño:
+-------------------
+- La penalización debe ser pequeña para no dominar la recompensa principal.
+- El objetivo no es hacer speedrun puro, sino medir si la presión temporal mejora la
+  eficiencia manteniendo full coverage, batería estable y patrulla balanceada.
+
+Notas:
+------
+- Igual que en exp_016, el cambio de observación obliga a entrenar desde cero.
+- Este experimento sirve para comparar tiempo como contexto frente a tiempo como incentivo.
+- Si la mejora en full_coverage_step no viene acompañada de estabilidad y seguridad,
+  el ajuste temporal no merece endurecerse más.
