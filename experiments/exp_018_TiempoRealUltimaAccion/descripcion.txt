@@ -1,0 +1,39 @@
+Experimento: exp_018_TiempoRealUltimaAccion
+===========================================
+
+Objetivo:
+---------
+Sustituir la señal de progreso del episodio por una señal temporal que mida
+el tiempo real consumido por la última acción antes de tomar la siguiente
+decisión.
+
+Observacion:
+------------
+[nodo(0-3), bateria(0-100), vis1, vis2, vis3, vis_c, tiempo_ultima_accion_s].
+
+Definicion de la señal temporal:
+-------------------------------
+- `tiempo_ultima_accion_s` es la duración real, en segundos, de la acción que
+  acaba de terminar.
+- Se mide en el script de Coppelia (Lua) usando `virtualTime` y se publica
+  como la señal float `robot_last_action_duration`.
+- Python (clase `RobotCoppeliaSim`) lee esa señal y `RobotEnv` la expone en la
+  observación en la última posición (`obs[6]`) y en `info['last_action_elapsed_s']`.
+- Al medirse con `virtualTime` la duración es independiente de la
+  aceleración de simulación (`SIM_ACCELERATION`) y del tiempo de pared del
+  host.
+
+Hipotesis:
+----------
+- El agente puede diferenciar acciones que tardan poco de acciones que bloquean
+  más tiempo real.
+- Si el tiempo influye de verdad en la decisión, debería aparecer en la política
+  una preferencia por secuencias más eficientes sin depender de un contador de
+  pasos artificial.
+
+Notas:
+------
+- `goTo()` y `actionStop()` en Lua actualizan `lastActionDuration` (tiempo de
+  inicio y cálculo al finalizar) para que tanto navegación como paradas
+  informen la duración real de la acción.
+- Como cambia la observación, el entrenamiento debe hacerse desde cero.

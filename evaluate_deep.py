@@ -39,7 +39,7 @@ def percentiles(values):
     return np.percentile(array, [10, 50, 90])
 
 # ── Configuración de experimento ───────────────────────────────────────────────
-EXP_NAME = "exp_016_TiempoEnObservacion"  # Debe coincidir con train.py
+EXP_NAME = "exp_018_TiempoRealUltimaAccion"  # Debe coincidir con train.py
 BASE_DIR = f"./experiments/{EXP_NAME}"
 os.makedirs(f"{BASE_DIR}/deep_evaluation", exist_ok=True)
 PLOTS_DIR = f"{BASE_DIR}/deep_evaluation/plotsv3"
@@ -108,6 +108,7 @@ all_recharge_from_hab1 = []
 all_recharge_from_hab2 = []
 all_recharge_from_hab3 = []
 all_recharge_from_other = []
+all_last_action_elapsed = []
 
 decision_battery_samples = []
 decision_recharge_flags = []
@@ -136,6 +137,7 @@ for ep in tqdm(range(NUM_EPISODES), desc="Episodios evaluados"):
     recharge_steps = []
     recharge_batteries = []
     recharge_from_counts = {'Hab1': 0, 'Hab2': 0, 'Hab3': 0, 'other': 0}
+    episode_action_elapsed = []
 
     while True:
         action, _ = model.predict(obs, deterministic=True)
@@ -145,6 +147,8 @@ for ep in tqdm(range(NUM_EPISODES), desc="Episodios evaluados"):
         battery = info['battery']
         last_action_name = info.get('last_action_name', 'unknown')
         last_stop_duration = info.get('last_stop_duration', 0)
+        last_action_elapsed_s = info.get('last_action_elapsed_s', 0.0)
+        episode_action_elapsed.append(float(last_action_elapsed_s))
 
         ep_reward += reward
         ep_steps += 1
@@ -177,9 +181,9 @@ for ep in tqdm(range(NUM_EPISODES), desc="Episodios evaluados"):
 
         if VERBOSE:
             if last_action_name == 'stop':
-                print(f"[{ep}] Paso {ep_steps}: {last_action_name} {last_stop_duration}s, nodo={node}, bat={battery:.1f}")
+                print(f"[{ep}] Paso {ep_steps}: {last_action_name} {last_stop_duration}s, nodo={node}, bat={battery:.1f}, t_acc={last_action_elapsed_s:.2f}s")
             else:
-                print(f"[{ep}] Paso {ep_steps}: {last_action_name}, nodo={node}, bat={battery:.1f}")
+                print(f"[{ep}] Paso {ep_steps}: {last_action_name}, nodo={node}, bat={battery:.1f}, t_acc={last_action_elapsed_s:.2f}s")
 
         if terminated:
             battery_depletions += 1
@@ -242,6 +246,7 @@ for ep in tqdm(range(NUM_EPISODES), desc="Episodios evaluados"):
     all_recharge_from_hab2.append(recharge_from_counts['Hab2'])
     all_recharge_from_hab3.append(recharge_from_counts['Hab3'])
     all_recharge_from_other.append(recharge_from_counts['other'])
+    all_last_action_elapsed.append(float(np.mean(episode_action_elapsed)) if episode_action_elapsed else 0.0)
 
     if (ep + 1) % 50 == 0:
         elapsed = time.time() - start_time
@@ -279,6 +284,7 @@ print(f"Tiempo en C p10/p50/p90:   {time_in_c_p10*100:.1f}% / {time_in_c_p50*100
 print(f"Tiempo fuera de C medio:   {np.mean(all_time_out_C)*100:.1f}%")
 print(f"Tiempo fuera de C p10/p50/p90: {time_out_c_p10*100:.1f}% / {time_out_c_p50*100:.1f}% / {time_out_c_p90*100:.1f}%")
 print(f"Batería mínima media:      {np.mean(all_min_battery):.1f}%")
+print(f"Duración última acción media:{np.mean(all_last_action_elapsed):.2f}s")
 print(f"Batería mínima p10/p50/p90: {min_battery_p10:.1f}% / {min_battery_p50:.1f}% / {min_battery_p90:.1f}%")
 print(f"Cargas medias:             {np.mean(all_charges):.2f}")
 print(f"Hab1/Hab2/Hab3 medias:     {np.mean(all_room1_counts):.2f} / {np.mean(all_room2_counts):.2f} / {np.mean(all_room3_counts):.2f}")

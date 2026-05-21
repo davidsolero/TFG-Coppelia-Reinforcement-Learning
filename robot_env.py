@@ -80,12 +80,14 @@ class RobotCoppeliaSim:
         node     = self._sim.getStringSignal('robot_currentNode')
         status   = self._sim.getStringSignal('robot_status')
         depleted = self._sim.getInt32Signal('robot_batteryDepleted') == 1
+        action_duration = self._sim.getFloatSignal('robot_last_action_duration')
 
         return {
             'battery':  battery  if battery  is not None else 100,
             'node':     node     if node     else 'unknown',
             'status':   status   if status   else 'unknown',
-            'depleted': depleted
+            'depleted': depleted,
+            'last_action_duration': action_duration if action_duration is not None else 0.0
         }
 
     def send_command(self, command):
@@ -140,10 +142,10 @@ class RobotEnv(gym.Env):
     def __init__(self, max_steps=50, trace=False):
         super().__init__()
 
-        # Espacio de observación: [nodo(0-3), bateria(0-100), vis1, vis2, vis3, vis_c, tiempo_ep]
+        # Espacio de observación: [nodo(0-3), bateria(0-100), vis1, vis2, vis3, vis_c, tiempo_ultima_accion_s]
         self.observation_space = gym.spaces.Box(
             low  = np.array([0,    0.0, 0, 0, 0, 0, 0.0], dtype=np.float32),
-            high = np.array([3, 100.0, 999, 999, 999, 999, 1.0], dtype=np.float32),
+            high = np.array([3, 100.0, 999, 999, 999, 999, 180.0], dtype=np.float32),
             dtype = np.float32
         )
         print("Observation space: {}".format(self.observation_space))
@@ -166,6 +168,8 @@ class RobotEnv(gym.Env):
         self._last_action_type  = None
         self._last_action_name  = 'reset'
         self._last_stop_duration = 0
+        self._last_action_elapsed_s = 0.0
+        self._episode_elapsed_s = 0.0
         self._last_action_timed_out = False
         self._last_action_final_status = 'idle'
 
@@ -185,6 +189,8 @@ class RobotEnv(gym.Env):
         self._last_action_type  = None
         self._last_action_name  = 'reset'
         self._last_stop_duration = 0
+        self._last_action_elapsed_s = 0.0
+        self._episode_elapsed_s = 0.0
         self._last_action_timed_out = False
         self._last_action_final_status = 'idle'
 
@@ -228,6 +234,8 @@ class RobotEnv(gym.Env):
 
         self._last_action_final_status = final_state['status']
         self._last_action_timed_out = final_state['status'] not in expected_statuses
+        self._last_action_elapsed_s = float(final_state.get('last_action_duration', 0.0))
+        self._episode_elapsed_s += self._last_action_elapsed_s
 
         # --- Calcular recompensa ---
 
@@ -262,9 +270,8 @@ class RobotEnv(gym.Env):
         node_idx = NODE_TO_IDX.get(state['node'], 3)
         battery  = float(state['battery'])
         vis = [float(self._visit_counts[node]) for node in ALL_NODES]
-        time_progress = float(self._numstepsinepisode) / float(self._max_steps) if self._max_steps > 0 else 0.0
-        time_progress = float(np.clip(time_progress, 0.0, 1.0))
-        return np.array([node_idx, battery] + vis + [time_progress], dtype=np.float32)
+        last_action_elapsed = float(np.clip(self._last_action_elapsed_s, 0.0, 180.0))
+        return np.array([node_idx, battery] + vis + [last_action_elapsed], dtype=np.float32)
 
     def _get_info(self):
         """Información auxiliar para logging."""
@@ -276,6 +283,8 @@ class RobotEnv(gym.Env):
             'last_action_type': self._last_action_type,
             'last_action_name': self._last_action_name,
             'last_stop_duration': int(self._last_stop_duration),
+            'last_action_elapsed_s': float(self._last_action_elapsed_s),
+            'episode_elapsed_s': float(self._episode_elapsed_s),
             'last_action_timed_out': bool(self._last_action_timed_out),
             'last_action_final_status': self._last_action_final_status,
         }

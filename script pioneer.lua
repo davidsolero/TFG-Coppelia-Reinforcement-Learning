@@ -140,9 +140,14 @@ function sysCall_init()
     -- Current node tracking
     currentNode = 'R'
     
+    -- Action timing (in virtual simulation time)
+    lastActionStartTime = virtualTime
+    lastActionDuration = 0.0
+    
     -- Command system
     sim.setStringSignal('robot_command', '')
     sim.setStringSignal('robot_status', 'idle')
+    sim.setFloatSignal('robot_last_action_duration', 0.0)
     
     logMessage(1, 'INIT', 'Robot starting at node: ' .. currentNode)
     logMessage(1, 'INIT', 'Movement mode: ' .. movementMode)
@@ -197,6 +202,9 @@ function publishState()
     sim.setStringSignal('robot_batteryPhase', batteryPhase)
     sim.setInt32Signal('robot_isCharging', isCharging and 1 or 0)
     sim.setInt32Signal('robot_batteryDepleted', batteryDepleted and 1 or 0)
+    sim.setFloatSignal('robot_last_action_duration', lastActionDuration)
+    -- También registrar en el log de Coppelia para facilitar depuración
+    logMessage(2, 'TIMING', string.format('LastActionDuration=%.3fs', lastActionDuration))
 end
 
 function setStatus(status)
@@ -248,6 +256,10 @@ function resetEnvironment()
     -- Reiniciar tiempo (real vs virtual)
     realPreviousSimulationTime = sim.getSimulationTime()
     virtualTime = realPreviousSimulationTime
+    
+    -- Reiniciar medición de acciones
+    lastActionStartTime = virtualTime
+    lastActionDuration = 0.0
     
     -- Publicar estado y marcar como listo
     publishState()
@@ -677,14 +689,18 @@ end
 -- =================================
 
 function goTo(targetNode)
+    lastActionStartTime = virtualTime or sim.getSimulationTime()
+    
     if not isBatteryOk() then 
         setStatus('depleted')
+        lastActionDuration = (virtualTime or sim.getSimulationTime()) - lastActionStartTime
         return false 
     end
     
     if not nodes[targetNode] then
         logMessage(0, 'ERROR', 'Unknown node: ' .. targetNode)
         setStatus('error')
+        lastActionDuration = (virtualTime or sim.getSimulationTime()) - lastActionStartTime
         return false
     end
     
@@ -695,6 +711,7 @@ function goTo(targetNode)
     if currentNode == targetNode then
         logMessage(1, 'NAV', 'Already at ' .. targetNode)
         setStatus('arrived')
+        lastActionDuration = (virtualTime or sim.getSimulationTime()) - lastActionStartTime
         return true
     end
     
@@ -704,6 +721,7 @@ function goTo(targetNode)
     if #nodePath == 0 then
         logMessage(0, 'ERROR', 'No path found to ' .. targetNode)
         setStatus('error')
+        lastActionDuration = (virtualTime or sim.getSimulationTime()) - lastActionStartTime
         return false
     end
     
@@ -714,6 +732,7 @@ function goTo(targetNode)
             if not isBatteryOk() then
                 logMessage(1, 'NAV', 'Aborted - battery depleted')
                 setStatus('depleted')
+                lastActionDuration = (virtualTime or sim.getSimulationTime()) - lastActionStartTime
                 return false
             end
 
@@ -724,6 +743,7 @@ function goTo(targetNode)
             if not pathName then
                 logMessage(0, 'ERROR', 'Path not found: ' .. fromNode .. ' -> ' .. toNode)
                 setStatus('error')
+                lastActionDuration = (virtualTime or sim.getSimulationTime()) - lastActionStartTime
                 return false
             end
 
@@ -735,12 +755,14 @@ function goTo(targetNode)
             if not isBatteryOk() then
                 logMessage(1, 'NAV', 'Aborted - battery depleted during teleport travel')
                 setStatus('depleted')
+                lastActionDuration = (virtualTime or sim.getSimulationTime()) - lastActionStartTime
                 return false
             end
 
             if not teleportToNode(toNode) then
                 logMessage(0, 'ERROR', 'Teleport target not found: ' .. toNode)
                 setStatus('error')
+                lastActionDuration = (virtualTime or sim.getSimulationTime()) - lastActionStartTime
                 return false
             end
 
@@ -752,12 +774,14 @@ function goTo(targetNode)
 
         logMessage(1, 'NAV', 'Arrived at ' .. targetNode .. ' (teleport mode)')
         setStatus('arrived')
+        lastActionDuration = (virtualTime or sim.getSimulationTime()) - lastActionStartTime
         return true
     end
     
     if not realignToNode(currentNode) then
         logMessage(1, 'NAV', 'Aborted during initial realignment')
         setStatus('depleted')
+        lastActionDuration = (virtualTime or sim.getSimulationTime()) - lastActionStartTime
         return false
     end
     
@@ -765,6 +789,7 @@ function goTo(targetNode)
         if not isBatteryOk() then
             logMessage(1, 'NAV', 'Aborted - battery depleted')
             setStatus('depleted')
+            lastActionDuration = (virtualTime or sim.getSimulationTime()) - lastActionStartTime
             return false
         end
         
@@ -775,6 +800,7 @@ function goTo(targetNode)
         if not pathName then
             logMessage(0, 'ERROR', 'Path not found: ' .. fromNode .. ' -> ' .. toNode)
             setStatus('error')
+            lastActionDuration = (virtualTime or sim.getSimulationTime()) - lastActionStartTime
             return false
         end
         
@@ -783,6 +809,7 @@ function goTo(targetNode)
         if not followPath(pathName) then
             logMessage(1, 'NAV', 'Path following interrupted')
             setStatus('depleted')
+            lastActionDuration = (virtualTime or sim.getSimulationTime()) - lastActionStartTime
             return false
         end
         
@@ -793,11 +820,13 @@ function goTo(targetNode)
     if not realignToNode(targetNode) then
         logMessage(1, 'NAV', 'Aborted during final realignment')
         setStatus('depleted')
+        lastActionDuration = (virtualTime or sim.getSimulationTime()) - lastActionStartTime
         return false
     end
     
     logMessage(1, 'NAV', 'Arrived at ' .. targetNode)
     setStatus('arrived')
+    lastActionDuration = (virtualTime or sim.getSimulationTime()) - lastActionStartTime
     return true
 end
 
@@ -806,6 +835,8 @@ function actionStop(duration)
         setStatus('depleted')
         return false 
     end
+    
+    lastActionStartTime = virtualTime or sim.getSimulationTime()
     
     duration = duration or 1
     logMessage(1, 'ACTION', 'Stop for ' .. duration .. ' seconds')
@@ -874,6 +905,8 @@ function actionStop(duration)
 
         sim.step()
     end
+    
+    lastActionDuration = (virtualTime or sim.getSimulationTime()) - lastActionStartTime
     
     if isBatteryOk() then
         setStatus('idle')

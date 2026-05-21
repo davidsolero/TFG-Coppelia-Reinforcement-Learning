@@ -15,12 +15,12 @@ from robot_env import RobotEnv
 import os
 
 # ── Configuración de experimento ───────────────────────────────────────────────
-EXP_NAME = "exp_016_TiempoEnObservacion"  # Experimento con tiempo de episodio en la observación
+EXP_NAME = "exp_018_TiempoRealUltimaAccion"  # Experimento con tiempo real de la última acción en la observación
 BASE_DIR = f"./experiments/{EXP_NAME}"
 os.makedirs(f"{BASE_DIR}/model", exist_ok=True)
 os.makedirs(f"{BASE_DIR}/train_logs", exist_ok=True)
 
-# Al cambiar la observación (se añade tiempo_ep), se debe reentrenar desde cero.
+# Al cambiar la observación (se añade tiempo_ultima_accion_s), se debe reentrenar desde cero.
 RESUME_TRAINING = False  # Cambiar a True solo si el modelo previo usa exactamente la misma observación
 
 # ── Parámetros ────────────────────────────────────────────────────────────────
