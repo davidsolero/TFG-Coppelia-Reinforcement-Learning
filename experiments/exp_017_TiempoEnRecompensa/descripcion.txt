@@ -18,6 +18,45 @@ Cambio principal respecto a exp_016:
 - Se añade una penalización temporal pequeña por paso no terminal en la recompensa.
 - No se modifica la acción ni la estructura general del entorno.
 
+Configuración de recompensa:
+---------------------------
+- Recompensa temporal por paso no terminal: `-0.02`.
+- Penalización por batería agotada: `-10.0` y fin de episodio.
+- Recompensa final al truncar por `max_steps`:
+  - `reward_final = reward_hab + penalty_C`
+  - `reward_hab` está en `[0, 10]` y mide lo uniforme que es la visita a Hab1, Hab2 y Hab3.
+  - `penalty_C = -50 * p_C^2`, donde `p_C = visitas_C / (visitas_Hab1 + visitas_Hab2 + visitas_Hab3 + visitas_C)`.
+- Las visitas se acumulan durante el episodio, pero solo la recompensa final usa esos contadores.
+
+Calculo de recompensa (step)
+---------------------------
+if final_state['depleted']:
+  reward = -10.0
+elif self._numstepsinepisode >= self._max_steps:
+  # Truncamiento: recompensa dispersa final basada en balance de habitaciones y penalizacion por C
+  visits = np.array([
+    self._visit_counts['Hab1'],
+    self._visit_counts['Hab2'],
+    self._visit_counts['Hab3'],
+  ], dtype=np.float32)
+  p = visits / np.sum(visits) if np.sum(visits) > 0 else np.array([0.0, 0.0, 0.0], dtype=np.float32)
+  desbalanceo = np.sum((1.0/3.0 - p) ** 2)
+  reward_hab = 10.0 * ((2.0/3.0 - desbalanceo) / (2.0/3.0))
+
+  all_visits = float(sum(self._visit_counts[node] for node in ALL_NODES))
+  if all_visits <= 0.0:
+    penalty_C = 0.0
+  else:
+    p_C = float(self._visit_counts['C']) / all_visits
+    penalty_C = -C_PENALTY_COEFF * (p_C ** 2)  # coeficiente = 50 en este experimento
+
+  reward = reward_hab + penalty_C
+else:
+  # Paso intermedio no terminal: pequeña penalización temporal
+  # Nota: los contadores `self._visit_counts` se actualizan en el momento
+  # en que la acción se ejecuta (no dentro del cálculo de recompensa).
+  reward = -TEMPORAL_STEP_PENALTY  # -0.02 por paso
+
 Hipótesis:
 ----------
 - El agente debería tender a completar la cobertura en menos pasos.
