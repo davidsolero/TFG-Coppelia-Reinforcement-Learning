@@ -37,9 +37,9 @@ taskkill /IM coppeliaSim.exe /F >nul 2>&1
 
 echo.
 echo Archivos generados:
-echo - experiments\[exp]\deep_evaluation\deepevaluation_resultsv3.csv
-echo - experiments\[exp]\deep_evaluation\deepevaluation_logv3.txt
-echo - experiments\[exp]\deep_evaluation\plotsv3\*.png
+echo - experiments\[exp]\deep_evaluation\deepevaluation_resultsv4.csv
+echo - experiments\[exp]\deep_evaluation\deepevaluation_logv4.txt
+echo - experiments\[exp]\deep_evaluation\plotsv4\*.png
 
 echo.
 pause

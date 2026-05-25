@@ -39,12 +39,12 @@ def percentiles(values):
     return np.percentile(array, [10, 50, 90])
 
 # ── Configuración de experimento ───────────────────────────────────────────────
-EXP_NAME = "exp_018_TiempoRealUltimaAccion"  # Debe coincidir con train.py
+EXP_NAME = "exp_017_TiempoEnRecompensa"  # Debe coincidir con train.py
 BASE_DIR = f"./experiments/{EXP_NAME}"
 os.makedirs(f"{BASE_DIR}/deep_evaluation", exist_ok=True)
-PLOTS_DIR = f"{BASE_DIR}/deep_evaluation/plotsv3"
+PLOTS_DIR = f"{BASE_DIR}/deep_evaluation/plotsv4"
 os.makedirs(PLOTS_DIR, exist_ok=True)
-LOG_PATH = f"{BASE_DIR}/deep_evaluation/deepevaluation_logv3.txt"
+LOG_PATH = f"{BASE_DIR}/deep_evaluation/deepevaluation_logv4.txt"
 
 
 class TeeStream:
@@ -109,6 +109,7 @@ all_recharge_from_hab2 = []
 all_recharge_from_hab3 = []
 all_recharge_from_other = []
 all_last_action_elapsed = []
+all_episode_elapsed = []
 
 decision_battery_samples = []
 decision_recharge_flags = []
@@ -247,6 +248,7 @@ for ep in tqdm(range(NUM_EPISODES), desc="Episodios evaluados"):
     all_recharge_from_hab3.append(recharge_from_counts['Hab3'])
     all_recharge_from_other.append(recharge_from_counts['other'])
     all_last_action_elapsed.append(float(np.mean(episode_action_elapsed)) if episode_action_elapsed else 0.0)
+    all_episode_elapsed.append(float(np.sum(episode_action_elapsed)) if episode_action_elapsed else 0.0)
 
     if (ep + 1) % 50 == 0:
         elapsed = time.time() - start_time
@@ -285,6 +287,7 @@ print(f"Tiempo fuera de C medio:   {np.mean(all_time_out_C)*100:.1f}%")
 print(f"Tiempo fuera de C p10/p50/p90: {time_out_c_p10*100:.1f}% / {time_out_c_p50*100:.1f}% / {time_out_c_p90*100:.1f}%")
 print(f"Batería mínima media:      {np.mean(all_min_battery):.1f}%")
 print(f"Duración última acción media:{np.mean(all_last_action_elapsed):.2f}s")
+print(f"Duración total episodio media:{np.mean(all_episode_elapsed):.2f}s")
 print(f"Batería mínima p10/p50/p90: {min_battery_p10:.1f}% / {min_battery_p50:.1f}% / {min_battery_p90:.1f}%")
 print(f"Cargas medias:             {np.mean(all_charges):.2f}")
 print(f"Hab1/Hab2/Hab3 medias:     {np.mean(all_room1_counts):.2f} / {np.mean(all_room2_counts):.2f} / {np.mean(all_room3_counts):.2f}")
@@ -326,9 +329,11 @@ df = pd.DataFrame({
     "recharge_from_hab2": all_recharge_from_hab2,
     "recharge_from_hab3": all_recharge_from_hab3,
     "recharge_from_other": all_recharge_from_other,
+    "mean_action_elapsed_s": all_last_action_elapsed,
+    "episode_elapsed_s": all_episode_elapsed,
 })
-df.to_csv(f"{BASE_DIR}/deep_evaluation/deepevaluation_resultsv3.csv", index=False)
-print(f"\nResultados guardados en {BASE_DIR}/deep_evaluation/deepevaluation_resultsv3.csv")
+df.to_csv(f"{BASE_DIR}/deep_evaluation/deepevaluation_resultsv4.csv", index=False)
+print(f"\nResultados guardados en {BASE_DIR}/deep_evaluation/deepevaluation_resultsv4.csv")
 
 # ── Gráficas ────────────────────────────────────────────────────────────────
 plt.figure()
@@ -396,6 +401,24 @@ plt.title("Reward por paso")
 plt.xlabel("Reward/paso")
 plt.ylabel("Frecuencia")
 plt.savefig(os.path.join(PLOTS_DIR, "hist_reward_per_step.png"), dpi=150, bbox_inches="tight")
+
+plt.figure()
+plt.hist(all_episode_elapsed, bins=20, color="#72B7B2")
+plt.title("Duración total real por episodio")
+plt.xlabel("Segundos por episodio")
+plt.ylabel("Frecuencia")
+plt.savefig(os.path.join(PLOTS_DIR, "hist_episode_elapsed_s.png"), dpi=150, bbox_inches="tight")
+
+steps_array = np.asarray(all_steps, dtype=np.float32)
+episode_elapsed_array = np.asarray(all_episode_elapsed, dtype=np.float32)
+seconds_per_step = np.divide(episode_elapsed_array, np.maximum(1.0, steps_array))
+
+plt.figure()
+plt.hist(seconds_per_step, bins=20, color="#ECA400")
+plt.title("Duración real por paso")
+plt.xlabel("Segundos por paso")
+plt.ylabel("Frecuencia")
+plt.savefig(os.path.join(PLOTS_DIR, "hist_seconds_per_step.png"), dpi=150, bbox_inches="tight")
 
 plt.figure()
 plt.hist(all_min_battery, bins=20)
