@@ -1,11 +1,12 @@
 # TFG - Aprendizaje por Refuerzo para Robot de Vigilancia en CoppeliaSim
 
-Este repositorio contiene el desarrollo completo del TFG centrado en el entrenamiento de un agente de Aprendizaje por Refuerzo (RL) para control de alto nivel de un robot de vigilancia en CoppeliaSim.
+Este repositorio contiene el desarrollo finalizado del Trabajo de Fin de Grado centrado en el entrenamiento de un agente de Aprendizaje por Refuerzo (RL) para control de alto nivel de un robot de vigilancia en CoppeliaSim.
 
 El agente aprende a:
 - Visitar de forma equilibrada las habitaciones Hab1, Hab2 y Hab3.
 - Gestionar la energia y decidir cuando ir al nodo de carga C.
 - Evitar terminar episodios por agotamiento de bateria.
+- Explorar el efecto de añadir informacion temporal a la observacion y a la recompensa.
 
 Tecnologias principales:
 - Python + Gymnasium para el entorno RL.
@@ -64,26 +65,27 @@ Flujo de una accion RL:
 - `3 -> C`
 
 ### 3.2 Espacio de observaciones
-Vector de 6 valores:
+La version final del entorno utiliza un vector de 7 valores:
 - nodo actual indexado (Hab1, Hab2, Hab3, C)
 - bateria (%)
 - contador de visitas Hab1
 - contador de visitas Hab2
 - contador de visitas Hab3
 - contador de visitas C
+- tiempo del episodio o duracion de la ultima accion, segun la variante del experimento
 
 ### 3.3 Finalizacion de episodio
 - `terminated=True` si la bateria llega a 0.
 - `truncated=True` al superar `max_steps` (por defecto 50).
 
-### 3.4 Recompensa principal (experimento actual)
-En la configuracion activa (`exp_005`):
-- `+1.0` por visitar Hab1/Hab2/Hab3 cuando esa habitacion esta por debajo de la media de visitas.
-- Penalizacion por ir a C adaptativa segun bateria:
-	- bateria > 70%: `-0.4`
-	- 40% < bateria <= 70%: `-0.2`
-	- bateria <= 40%: `-0.05`
-- `-10.0` si la bateria se agota.
+### 3.4 Recompensa principal
+El proyecto evoluciono desde recompensas densas basadas en la media de visitas hasta una formulacion final con recompensa dispersa al final del episodio, penalizacion cuadratica por el uso de C y extensiones experimentales sobre la accion stop y la informacion temporal.
+
+En la configuracion final (`exp_018`):
+- la recompensa base se calcula al final del episodio a partir del balance entre habitaciones;
+- el uso de C se penaliza de forma cuadratica para desincentivar recargas excesivas;
+- la bateria agotada sigue imponiendo una penalizacion fuerte de `-10.0`;
+- la observacion incorpora la señal temporal correspondiente a la variante del experimento.
 
 ## 4. Requisitos
 
@@ -210,28 +212,69 @@ scripts\deep evaluacion.bat
 
 ## 10. Experimentos realizados
 
-La carpeta `experiments/` contiene la evolucion del diseno de recompensa:
+La carpeta `experiments/` contiene la evolucion completa del diseno de recompensa y de la observacion del agente:
 
 1. `exp_001_MediaSoloHabs`
-- Recompensa basada en media de Hab1/Hab2/Hab3.
+- Recompensa basada en la media de visitas a Hab1, Hab2 y Hab3.
 - Sin penalizacion por ir a C.
 
 2. `exp_001_MediaSoloHabsRemakeobs`
 - Variante de `exp_001` con observacion reconstruida a 6 componentes.
 
 3. `exp_002_MediaHabsCsinReward`
-- La media incluye C, pero C no aporta +1.
+- La media incluye C, pero C no aporta recompensa directa.
 
 4. `exp_003_MediaHabsCconReward`
-- La media incluye C y C si aporta +1.
+- La media incluye C y C tambien aporta recompensa.
 
 5. `exp_004_MediaHabSinCyConPenal`
-- Media sobre habitaciones principales.
+- Media sobre las habitaciones principales.
 - Penalizacion fija por ir a C (`-0.1`).
 
-6. `exp_005_MediaHabSinCyConPenalAdaptativa` (actual)
-- Media sobre habitaciones principales.
+6. `exp_005_MediaHabSinCyConPenalAdaptativa`
+- Media sobre las habitaciones principales.
 - Penalizacion adaptativa por ir a C segun nivel de bateria.
+
+7. `exp_006_MediaHabSinCyConPenalAdaptativaBalance`
+- Refuerzo del balance entre habitaciones.
+
+8. `exp_007_MediaHabSinCyConPenalAdaptativaBalance85`
+- Endurecimiento del umbral de penalizacion para recargas con bateria alta.
+
+9. `exp_008_MediaHabSinCyConPenalFija`
+- Sustitucion de la penalizacion adaptativa por una penalizacion fija revisada.
+
+10. `exp_009_BalanceUniformeHabs`
+- Reformulacion de la recompensa hacia una medida continua de balance uniforme.
+
+11. `exp_010_RecompensaDispersaFinal`
+- Paso a recompensa dispersa calculada al final del episodio.
+
+12. `exp_011_DispersaConPenalCuadratica`
+- Penalizacion cuadratica por el uso de C con coeficiente 10.
+
+13. `exp_012_DispersaConPenalCuadratica50`
+- Variante de `exp_011` con coeficiente 50.
+
+14. `exp_013_HibridoAccionStop`
+- Introduccion de la accion stop y espacio de accion hibrido.
+
+15. `exp_014_StopVelocidadNormal`
+- Validacion del espacio hibrido con la velocidad normal del robot.
+
+16. `exp_015_HibridoAccionStopAcelerado`
+- Test de regresion con aceleracion de simulacion.
+
+17. `exp_016_TiempoEnObservacion`
+- Inclusion del progreso temporal del episodio en la observacion.
+
+18. `exp_017_TiempoEnRecompensa`
+- Incorporacion de presion temporal en la recompensa.
+
+19. `exp_018_TiempoRealUltimaAccion`
+- Inclusion de la duracion real de la ultima accion en la observacion.
+
+La version final del proyecto queda asociada a `exp_018_TiempoRealUltimaAccion`.
 
 ## 11. Scripts auxiliares
 
@@ -258,7 +301,7 @@ python train.py
 python evaluate.py
 ```
 
-6. Ejecuta evaluacion profunda:
+6. Ejecuta la evaluacion profunda para obtener las metricas finales del experimento activo:
 
 ```bash
 python evaluate_deep.py
@@ -293,6 +336,8 @@ python evaluate_deep.py
 
 ## 15. Autor y contexto academico
 
-Trabajo desarrollado como TFG sobre control inteligente y aprendizaje por refuerzo aplicado a robotica de vigilancia en entorno simulado.
+Autor: David Solero Chicano.
 
-Si necesitas, se puede ampliar este README con una seccion especifica de metodologia experimental y tablas comparativas finales para inclusion directa en la memoria.
+Tutorizado por: Ana Maria Cruz Martin y Juan Antonio Fernandez Madrigal.
+
+Trabajo desarrollado como Trabajo de Fin de Grado en la Universidad de Malaga sobre control inteligente y aprendizaje por refuerzo aplicado a robotica de vigilancia en entorno simulado.
