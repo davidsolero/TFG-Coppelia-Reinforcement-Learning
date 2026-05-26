@@ -39,7 +39,7 @@ def percentiles(values):
     return np.percentile(array, [10, 50, 90])
 
 # ── Configuración de experimento ───────────────────────────────────────────────
-EXP_NAME = "exp_017_TiempoEnRecompensa"  # Debe coincidir con train.py
+EXP_NAME = "exp_018_TiempoRealUltimaAccion"  # Debe coincidir con train.py
 BASE_DIR = f"./experiments/{EXP_NAME}"
 os.makedirs(f"{BASE_DIR}/deep_evaluation", exist_ok=True)
 PLOTS_DIR = f"{BASE_DIR}/deep_evaluation/plotsv4"
