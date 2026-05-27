@@ -1,0 +1,43 @@
+Guardando log en: ./experiments/exp_011_DispersaConPenalCuadratica/deep_evaluation/deepevaluation_logv4.txt
+Conectando a CoppeliaSim...
+Observation space: Box(0.0, [  3. 100. 999. 999. 999. 999.], (6,), float32)
+Action space: Discrete(4)
+Cargando modelo: ./experiments/exp_011_DispersaConPenalCuadratica/model/ppo_robot.zip
+Wrapping the env with a `Monitor` wrapper
+Wrapping the env in a DummyVecEnv.
+
+Evaluando 500 episodios...
+
+
+Episodios evaluados:   0%|                                 | 0/500 [00:00<?, ?it/s]
+Episodios evaluados: 100%|#################################| 500/500 [3:13:43<00:00, 23.25s/it]
+
+============================================================
+RESUMEN GLOBAL
+============================================================
+Reward medio:              4.63 ± 0.13
+Reward p10/p50/p90:        4.46 / 4.59 / 4.89
+Reward por paso medio:     0.093 ± 0.003
+Reward/step p10/p50/p90:   0.089 / 0.092 / 0.098
+Habitaciones medias:       2.00 / 3
+Full coverage rate:        0.0%
+Paso medio de cobertura:   nan
+Cobertura p10/p50/p90:     nan / nan / nan
+Tiempo medio en C:         51.2%
+Tiempo en C p10/p50/p90:   44.0% / 52.0% / 58.0%
+Tiempo fuera de C medio:   48.8%
+Tiempo fuera de C p10/p50/p90: 42.0% / 48.0% / 56.0%
+Batería mínima media:      100.0%
+Duración última acción media:0.00s
+Duración total episodio media:0.00s
+Batería mínima p10/p50/p90: 100.0% / 100.0% / 100.0%
+Cargas medias:             14.42
+Hab1/Hab2/Hab3 medias:     13.88 / 0.00 / 10.53
+Desbalance medio (std):    5.99
+Desbalance medio (max-min): 14.00
+Episodios con batería 0:   0/500
+Batería media al recargar: 100.0%
+
+Resultados guardados en ./experiments/exp_011_DispersaConPenalCuadratica/deep_evaluation/deepevaluation_resultsv4.csv
+
+Evaluación completada.
