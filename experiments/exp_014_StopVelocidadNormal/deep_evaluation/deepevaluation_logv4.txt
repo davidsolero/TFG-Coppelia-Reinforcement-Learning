@@ -1,0 +1,45 @@
+Guardando log en: ./experiments/exp_014_StopVelocidadNormal/deep_evaluation/deepevaluation_logv4.txt
+Conectando a CoppeliaSim...
+Observation space: Box(0.0, [  3. 100. 999. 999. 999. 999.], (6,), float32)
+Action space: MultiDiscrete([ 5 51])
+Cargando modelo: ./experiments/exp_014_StopVelocidadNormal/model/ppo_robot.zip
+Wrapping the env with a `Monitor` wrapper
+Wrapping the env in a DummyVecEnv.
+
+Evaluando 500 episodios...
+
+
+Episodios evaluados:   0%|                                   | 0/500 [00:00<?, ?it/s]
+Episodios evaluados: 100%|###################################| 500/500 [9:55:03<00:00, 71.41s/it]
+
+============================================================
+RESUMEN GLOBAL
+============================================================
+Reward medio:              6.53 ± 0.34
+Reward p10/p50/p90:        6.02 / 6.78 / 6.78
+Reward por paso medio:     0.131 ± 0.007
+Reward/step p10/p50/p90:   0.120 / 0.135 / 0.135
+Habitaciones medias:       3.00 / 3
+Full coverage rate:        100.0%
+Paso medio de cobertura:   25.1
+Cobertura p10/p50/p90:     24.0 / 25.0 / 26.0
+Tiempo medio en C:         20.4%
+Tiempo en C p10/p50/p90:   18.0% / 20.0% / 24.0%
+Tiempo fuera de C medio:   79.6%
+Tiempo fuera de C p10/p50/p90: 76.0% / 80.0% / 82.0%
+Batería mínima media:      100.0%
+Duración última acción media:7.59s
+Duración total episodio media:379.58s
+Batería mínima p10/p50/p90: 100.0% / 100.0% / 100.0%
+Cargas medias:             8.80
+Hab1/Hab2/Hab3 medias:     5.50 / 22.19 / 12.14
+Desbalance medio (std):    6.93
+Desbalance medio (max-min): 16.69
+Episodios con batería 0:   0/500
+Batería media al recargar: 100.0%
+
+Resultados guardados en ./experiments/exp_014_StopVelocidadNormal/deep_evaluation/deepevaluation_resultsv4.csv
+C:\Users\usuario\Documents\GitHub\TFG-Coppelia-Reinforcement-Learning\evaluate_deep.py:507: RuntimeWarning: All-NaN slice encountered
+  plt.ylim(0, min(100, max(5, np.nanmax(recharge_prob_by_bin.values) + 6)))
+
+Evaluación completada.
