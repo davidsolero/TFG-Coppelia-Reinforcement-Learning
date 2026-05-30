@@ -142,6 +142,7 @@ for ep in tqdm(range(NUM_EPISODES), desc="Episodios evaluados"):
 
     while True:
         action, _ = model.predict(obs, deterministic=True)
+        action = int(np.asarray(action).item())
         obs, reward, terminated, truncated, info = env.step(action)
 
         node = info['node']
@@ -279,7 +280,8 @@ print(f"Reward por paso medio:     {np.mean(all_reward_per_step):.3f} ± {np.std
 print(f"Reward/step p10/p50/p90:   {reward_per_step_p10:.3f} / {reward_per_step_p50:.3f} / {reward_per_step_p90:.3f}")
 print(f"Habitaciones medias:       {np.mean(all_rooms):.2f} / 3")
 print(f"Full coverage rate:        {np.mean(all_full_coverage)*100:.1f}%")
-print(f"Paso medio de cobertura:   {np.nanmean(all_full_coverage_step):.1f}")
+coverage_step_mean = np.nanmean(coverage_steps) if coverage_steps.size else np.nan
+print(f"Paso medio de cobertura:   {coverage_step_mean:.1f}")
 print(f"Cobertura p10/p50/p90:     {coverage_step_p10:.1f} / {coverage_step_p50:.1f} / {coverage_step_p90:.1f}")
 print(f"Tiempo medio en C:         {np.mean(all_time_in_C)*100:.1f}%")
 print(f"Tiempo en C p10/p50/p90:   {time_in_c_p10*100:.1f}% / {time_in_c_p50*100:.1f}% / {time_in_c_p90*100:.1f}%")
@@ -485,15 +487,22 @@ if decision_battery_samples:
         "battery_before": decision_battery_samples,
         "recharged": decision_recharge_flags,
     })
-    battery_bins = np.arange(0, 110, 10)
+    battery_bins = np.arange(0, 111, 10)
     decisions_df["battery_bin"] = pd.cut(
         decisions_df["battery_before"],
         bins=battery_bins,
-        right=False,
+        right=True,
         include_lowest=True,
     )
     recharge_prob_by_bin = decisions_df.groupby("battery_bin", observed=False)["recharged"].mean() * 100.0
     recharge_count_by_bin = decisions_df.groupby("battery_bin", observed=False)["recharged"].count()
+
+    valid_recharge_prob = recharge_prob_by_bin.dropna()
+    if valid_recharge_prob.empty:
+        recharge_prob_by_bin = pd.Series([0.0], index=["sin datos"])
+        recharge_count_by_bin = pd.Series([0], index=["sin datos"])
+    else:
+        recharge_prob_by_bin = recharge_prob_by_bin.fillna(0.0)
 
     plt.figure(figsize=(10, 4))
     x_labels = [str(interval) for interval in recharge_prob_by_bin.index]
@@ -504,7 +513,7 @@ if decision_battery_samples:
     plt.title("Probabilidad de recargar por batería previa")
     plt.xlabel("Bin de batería previa")
     plt.ylabel("Probabilidad de recarga (%)")
-    plt.ylim(0, min(100, max(5, np.nanmax(recharge_prob_by_bin.values) + 6)))
+    plt.ylim(0, min(100, max(5, float(np.nanmax(recharge_prob_by_bin.values)) + 6)))
     plt.xticks(rotation=30)
     plt.tight_layout()
     plt.savefig(os.path.join(PLOTS_DIR, "prob_recharge_by_battery_bin.png"), dpi=150, bbox_inches="tight")
