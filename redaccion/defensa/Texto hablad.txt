@@ -1,0 +1,203 @@
+TEXTO HABLADO — PRESENTACIÓN TFG
+Aprendizaje por refuerzo para el control de alto nivel de robots móviles
+David Solero Chicano
+========================================================================
+
+
+DIAPOSITIVA 1 — PORTADA
+------------------------
+
+"Buenos días. Mi nombre es David Solero Chicano y hoy voy a presentar mi Trabajo de
+Fin de Grado, titulado Aprendizaje por refuerzo para el control de alto nivel de 
+robots móviles, realizado bajo la dirección de Ana María Cruz Martín y Juan Antonio
+Fernández Madrigal."
+
+
+DIAPOSITIVA 2 — MOTIVACIÓN
+----------------------------
+"Los robots móviles de vigilancia necesitan operar durante largos periodos de forma 
+autónoma. Uno de sus problemas fundamentales es la toma de decisiones de alto nivel: 
+qué zonas visitar, en qué orden y cuándo interrumpir la misión para recargar la batería.
+
+Los enfoques clásicos resuelven este problema mediante reglas fijas o heurísticas 
+diseñadas manualmente, mientras que el aprendizaje por refuerzo ofrece una alternativa
+más flexible: permitir que sea el propio agente quien aprenda estas decisiones a partir 
+de la experiencia.
+
+Además, este trabajo se centra en un problema de decisión de alto nivel, un aspecto 
+menos estudiado que otras aplicaciones del aprendizaje por refuerzo en robótica, donde 
+la mayor parte de los trabajos se enfocan en tareas de bajo nivel como la navegación 
+o el control del movimiento."
+
+
+DIAPOSITIVA 3 — OBJETIVOS
+---------------------------
+
+"El objetivo principal del trabajo fue analizar el uso del aprendizaje por refuerzo para 
+el control de alto nivel de un robot móvil simulado, buscando maximizar la cobertura del 
+entorno mientras gestiona correctamente su autonomía energética.
+
+Para alcanzar este objetivo se plantearon cinco metas: diseñar el entorno en CoppeliaSim, 
+integrarlo con Python mediante ZeroMQ, formular el problema como un entorno Gymnasium, 
+entrenar agentes utilizando PPO y, finalmente, estudiar si añadir información temporal 
+mejora las políticas aprendidas."
+
+
+DIAPOSITIVA 4 — TECNOLOGÍAS USADAS
+---------------------------
+
+"Estas son las principales tecnologías empleadas durante el desarrollo del proyecto.
+
+CoppeliaSim se utilizó como simulador del robot y del entorno. Python implementó toda 
+la lógica del aprendizaje por refuerzo y la comunicación con el simulador mediante ZeroMQ.
+
+El problema se formuló utilizando Gymnasium y el entrenamiento del agente se realizó 
+con Stable-Baselines3 empleando el algoritmo PPO. Además, para el análisis de resultados 
+se utilizaron herramientas como NumPy, Pandas y Matplotlib."**
+
+
+DIAPOSITIVA 4 — ARQUITECTURA DEL SISTEMA
+------------------------------------------
+
+"La arquitectura se divide en tres bloques.En CoppeliaSim se ejecuta la simulación del 
+robot y del entorno.Python implementa el entorno Gymnasium, calcula las recompensas y 
+comunica el simulador con el agente mediante ZeroMQ.Finalmente, PPO interactúa con 
+este entorno para aprender la política de decisión.
+
+A la derecha puede verse el escenario utilizado durante todos los experimentos."
+
+
+DIAPOSITIVA 5 — DEFINICIÓN DEL PROBLEMA RL
+--------------------------------------
+
+"El problema se formuló como un proceso de decisión de Markov. El estado incluye la 
+posición actual del robot, el nivel de batería y el número de visitas acumuladas a 
+cada habitación. Las acciones consisten en desplazarse hacia una de las tres 
+habitaciones o hacia la estación de carga. Cada episodio finaliza cuando se alcanzan
+50 acciones o cuando la batería se agota. A partir de esta formulación se entrenó un
+agente PPO, siendo el diseño de la recompensa el principal objeto de estudio del trabajo."
+
+
+DIAPOSITIVA 6 — Línea 1 (primera diapositiva)
+--------------------------------------------
+
+"La primera línea de investigación utiliza una recompensa densa, es decir, el agente
+recibe una señal en cada paso que realiza.Se recompensa la visita a habitaciones 
+poco exploradas y se penaliza el agotamiento completo de la batería. A partir de esta
+idea se realizaron distintas modificaciones para mejorar el comportamiento aprendido."
+
+
+DIAPOSITIVA 7 — Línea 1 (segunda diapositiva)
+-----------------------------
+
+"Tras varios experimentos se llegó al experimento 006, que introducía una penalización
+cuando el agente sobrevisitaba una misma habitación. Esta configuración consiguió
+cobertura completa en todos los episodios, ningún agotamiento de batería y el mejor 
+equilibrio entre habitaciones de todo el trabajo. Por ello fue seleccionado como la 
+mejor configuración global."
+
+
+DIAPOSITIVA 8 — Línea 2 (primera)
+------------------------------------
+
+"La segunda línea sustituye la recompensa densa por una recompensa dispersa. En lugar de
+recibir una señal continuamente, el agente solo es evaluado al final del episodio 
+mediante un balance global de las visitas y una penalización relacionada con el uso 
+de la estación de carga."
+
+DIAPOSITIVA 9 — Línea 2 (segunda)
+-----------------------------------------------------
+"Aunque este enfoque permitió mejorar ligeramente el comportamiento energético,
+el aprendizaje fue mucho más difícil y siguió existiendo un importante desequilibrio
+entre habitaciones. Esto puso de manifiesto que, para este problema, una recompensa densa
+proporciona una guía mucho más útil durante el entrenamiento."
+
+
+DIAPOSITIVA 10 — Linea 3  Acción Stop (introducción)
+--------------------------------
+
+"La tercera línea incorpora una nueva acción denominada Stop.Con ella el agente puede 
+decidir permanecer detenido durante un tiempo antes de realizar la siguiente acción. 
+Esto amplía el espacio de acciones y permite al agente gestionar explícitamente el 
+tiempo dentro del episodio."
+
+
+DIAPOSITIVA 10 — Linea 3 Acción Stop (introducción)
+--------------------------------
+
+Además, durante esta línea se validó una aceleración de la simulación multiplicando
+por tres la velocidad nominal del robot. El objetivo era reducir el tiempo necesario
+para entrenar y evaluar los agentes.
+
+Los resultados confirmaron que esta aceleración permitía disminuir significativamente
+dichos tiempos sin alterar el comportamiento aprendido ni las métricas obtenidas, por lo
+que se convirtió en una mejora muy útil desde el punto de vista práctico
+
+
+
+DIAPOSITIVA 11 — Linea 3 Acción Stop (velocidad)
+-------------------------------------------------
+
+"De forma adicional, también se validó un factor de aceleración de la simulación de ×3.
+
+El objetivo era comprobar que acelerar el tiempo de simulación reducía significativamente 
+el tiempo de entrenamiento y evaluación sin modificar la dinámica del aprendizaje.
+
+Los resultados confirmaron que las métricas obtenidas eran equivalentes a las del entorno
+sin aceleración, por lo que esta configuración pasó a utilizarse como estándar en los 
+experimentos posteriores."
+
+
+DIAPOSITIVA 12 — Linea 4 Información temporal (introducción)
+--------------------------------------
+
+"La última línea estudia si proporcionar información temporal explícita en la observación
+permite al agente aprender políticas más eficientes sin modificar la función de recompensa.
+ Para ello se añadieron nuevas variables relacionadas con el momentodel episodio y 
+la duración de las acciones."
+
+
+DIAPOSITIVA 13 — Linea 4 Información temporal (resultado)
+--------------------------------------
+"Los experimentos mostraron que esta información modifica la estrategia energética 
+del agente. Las recargas pasan a realizarse de forma más conservadora. Sin embargo, 
+no se consiguió mejorar el equilibrio de visitas entre habitaciones, por lo que la 
+recompensa siguió siendo el elemento más determinante."
+
+
+DIAPOSITIVA 14 - Demostración
+--------------------------------------
+
+"A continuación mostraré una demostración del sistema funcionando.
+
+En ella podremos observar cómo el agente aplica la política aprendida para decidir 
+qué habitación visitar y cuándo desplazarse a la estación de carga."
+
+
+DIAPOSITIVA 13 — CONCLUSIONES
+--------------------------------
+"Como principales conclusiones, se ha desarrollado un entorno completo de aprendizaje
+por refuerzo integrando CoppeliaSim, Python y PPO. Los resultados muestran claramente
+que las recompensas densas producen mejores políticas que las recompensas dispersas.
+El experimento 006 obtuvo el mejor equilibrio entre cobertura, consumo energético y 
+balance de visitas. Finalmente, la información temporal modificó la gestión de la 
+energía, aunque por sí sola no consiguió resolver el desequilibrio entre habitaciones."
+
+
+DIAPOSITIVA 14 — LÍNEAS FUTURAS Y CIERRE
+------------------------------------------
+
+"Como continuación de este trabajo, resulta interesante aumentar la complejidad del 
+entorno mediante mapas más grandes, obstáculos dinámicos o varias estaciones de carga.
+Desde el punto de vista del aprendizaje por refuerzo, también sería interesante evaluar 
+otros algoritmos, incorporar memoria temporal o estudiar nuevas funciones de recompensa.
+Finalmente, el siguiente paso natural sería transferir este sistema a un robot físico y 
+ampliar el problema a escenarios con varios robots colaborando."
+
+Muchas gracias."
+
+
+========================================================================
+FIN DEL TEXTO HABLADO
+Duración estimada: 14-16 minutos
+========================================================================
