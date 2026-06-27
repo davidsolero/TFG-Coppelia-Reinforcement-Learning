@@ -7,21 +7,24 @@ David Solero Chicano
 DIAPOSITIVA 1 — PORTADA
 ------------------------
 
-"Buenos días. Mi nombre es David Solero Chicano y hoy voy a presentar mi Trabajo de
+Buenos días. Mi nombre es David Solero Chicano y hoy voy a presentar mi Trabajo de
 Fin de Grado, titulado Aprendizaje por refuerzo para el control de alto nivel de 
 robots móviles (ya nombrado), realizado bajo la dirección de Ana María Cruz Martín y 
-Juan Antonio Fernández Madrigal."
+Juan Antonio Fernández Madrigal.
 
 
-DIAPOSITIVA 2 — MOTIVACIÓN
+DIAPOSITIVA 2 — MOTIVACIÓN Y CONTEXTO
 ----------------------------
-"Los robots móviles de vigilancia necesitan operar durante largos periodos de forma 
-autónoma. Uno de sus problemas fundamentales es la toma de decisiones de alto nivel: 
+En los últimos años, los robots móviles han adquirido un papel cada vez más importante
+en aplicaciones como la vigilancia, la inspección o la logística.
+
+Los robots móviles de vigilancia necesitan operar durante largos periodos de forma 
+autónoma. Uno de sus problemas fundamentales es la toma de decisiones de alto nivel como 
 qué zonas visitar, en qué orden y cuándo interrumpir la misión para recargar la batería.
 
 Los enfoques clásicos resuelven este problema mediante reglas fijas o heurísticas 
 diseñadas manualmente, mientras que el aprendizaje por refuerzo ofrece una alternativa
-más flexible: permitir que sea el propio agente quien aprenda estas decisiones a partir 
+más flexible: permitir que sea el propio robot quien aprenda estas decisiones a partir 
 de la experiencia.
 
 Además, este trabajo se centra en un problema de decisión de alto nivel, un aspecto 
@@ -33,117 +36,144 @@ o el control del movimiento."
 DIAPOSITIVA 3 — OBJETIVOS
 ---------------------------
 
-"El objetivo principal del trabajo fue analizar el uso del aprendizaje por refuerzo para 
+El objetivo principal del trabajo fue analizar el uso del aprendizaje por refuerzo para 
 el control de alto nivel de un robot móvil simulado, buscando maximizar la cobertura del 
-entorno mientras gestiona correctamente su autonomía energética.
+entorno y el balance de las visitas mientras gestiona correctamente su autonomía energética.
 
 Para alcanzar este objetivo se plantearon cinco metas: diseñar el entorno en CoppeliaSim, 
 integrarlo con Python mediante ZeroMQ, formular el problema como un entorno Gymnasium, 
 entrenar agentes utilizando PPO y, finalmente, estudiar si añadir información temporal 
-mejora las políticas aprendidas."
+mejora las políticas aprendidas.
 
 
 DIAPOSITIVA 4 — TECNOLOGÍAS USADAS
 ---------------------------
 
-"Estas son las principales tecnologías empleadas durante el desarrollo del proyecto.
+Estas son las principales tecnologías empleadas durante el desarrollo del proyecto.
 
 CoppeliaSim se utilizó como simulador del robot y del entorno. Python implementó toda 
 la lógica del aprendizaje por refuerzo y la comunicación con el simulador mediante ZeroMQ.
 
 El problema se formuló utilizando Gymnasium y el entrenamiento del sistema se realizó 
 con Stable-Baselines3 empleando el algoritmo PPO. Además, para el análisis de resultados 
-se utilizaron herramientas como NumPy, Pandas y Matplotlib."**
+se utilizaron herramientas como NumPy, Pandas y Matplotlib.
 
 
 DIAPOSITIVA 4 — ARQUITECTURA DEL SISTEMA
 ------------------------------------------
 
-"La arquitectura se divide en tres bloques.En CoppeliaSim se ejecuta la simulación del 
-robot y del entorno.Python implementa el entorno Gymnasium, calcula las recompensas y 
-comunica el simulador con el agente mediante ZeroMQ.Finalmente, PPO interactúa con 
-este entorno para aprender la política de decisión.
+La arquitectura se divide en tres capas.
+La capa de simulación en CoppeliaSim con lenguaje Lua se ejecuta la simulación del robot y del entorno.
 
-A la derecha puede verse el escenario utilizado durante todos los experimentos."
+A la derecha puede verse el escenario utilizado durante todos los experimentos. En el podemos observar
+el robot Pioneer P3DX, 3 habitaciones a vigilar y una estación donde recargar batería. La eleccion del robot
+pasa a segundo plano al centrar el problema en el control a alto nivel.
 
+La capa del entorno en Python que implementa la interfaz de Gymnasium, calcula las recompensas y 
+comunica Coppelia con el modelo mediante ZeroMQ.
+
+Finalmente la capa de aprendizaje, donde usando el algoritmo PPO interactúa 
+con este entorno para aprender la política de decisión.
 
 DIAPOSITIVA 5 — DEFINICIÓN DEL PROBLEMA RL
 --------------------------------------
 
-"El problema se formuló como un proceso de decisión de Markov. El estado recoge la
-información que el agente conoce en cada instante incluye la posición actual del 
-robot, el nivel de batería y el número de visitas acumuladas a cada habitación. 
+El problema se formuló como un proceso de decisión de Markov, en el que el agente
+observa el estado del entorno, selecciona una acción y recibe una recompensa en 
+función del resultado obtenido. 
 
-Las acciones consisten en desplazarse hacia una de las tres habitaciones o hacia
-la estación de carga. Cada episodio finaliza cuando se alcanzan50 acciones o 
-cuando la batería se agota.
+La observación recoge en el estado la información que el agente, en este caso el robot,
+conoce en cada instante incluye la posición actual del robot, el nivel de batería y 
+el número de visitas acumuladas a cada habitación. 
 
-A partir de esta formulación se entrenó un modelo PPO, siendo el diseño de la 
-recompensa el principal objeto de estudio del trabajo.
+Las acciones consisten en decisiones discretas donde el robot puede
+desplazarse hacia una de las tres habitaciones o hacia la estación de carga. 
+Cada episodio finaliza cuando se alcanzan 50 acciones o cuando la batería se agota.
 
-Una vez construido el entorno, el resto del trabajo se organizó en cuatro líneas
-de investigación, cada una centrada en estudiar un aspecto diferente del aprendizaje
-del agente"
+A partir de esta formulación se entrenó un modelo usando un algoritmo PPO elegido por 
+x, siendo el diseño de la recompensa una parte importante del trabajo.
+
+Una vez construido el sistema, el resto del trabajo se organizó en cuatro líneas
+de investigación, cada una centrada en estudiar un aspecto diferente del aprendizaje.
 
 
 DIAPOSITIVA 6 — Línea 1 (primera diapositiva)
 --------------------------------------------
 
-"La primera línea de investigación se centró en el diseño de la función de recompensa,
+La primera línea de investigación se centró en el diseño de la función de recompensa,
 es decir, la señal que guía el aprendizaje del robot. En este caso se utilizó una 
 recompensa densa, el modelo recibe una señal en cada paso que realiza.
 
 Se recompensa la visita a habitaciones poco exploradas y se penaliza el agotamiento 
 completo de la batería. A partir de esta idea se realizaron distintas modificaciones
-para mejorar el comportamiento aprendido."
+para mejorar el comportamiento aprendido.
+
+En los primeros experimentos la politica aprendida resultaba degenerada, permaneciendo
+el episodio entero en la estación de carga como podemos observar en esta grafica de 
+tiempo en la estación en el experimento 001.
 
 
 DIAPOSITIVA 7 — Línea 1 (segunda diapositiva)
 -----------------------------
 
-"Tras varios experimentos se llegó al experimento 006, que introducía una penalización
+Tras varios experimentos se llegó al experimento 006, que introducía una penalización
 cuando el robot sobrevisitaba una misma habitación. Esta configuración consiguió
 cobertura completa en todos los episodios, ningún agotamiento de batería y el mejor 
 equilibrio entre habitaciones de todo el trabajo. Por ello fue seleccionado como la 
-mejor configuración global."
+mejor configuración global.
 
 
 DIAPOSITIVA 8 — Línea 2 (primera)
 ------------------------------------
 
-"Una vez obtenidos estos resultados, la siguiente cuestión fue comprobar si el modelo
-podía aprender recibiendo mucha menos información durante el entrenamiento. Para
-ello se sustituyó la recompensa densa, en lugar de recibir una señal continuamente, 
+Una vez obtenidos estos resultados, la siguiente cuestión fue comprobar si el modelo
+podía aprender recibiendo mucha menos información durante el entrenamiento.
+
+Para ello se sustituyó la recompensa densa, en lugar de recibir una señal continuamente, 
 el agente solo es evaluado al final del episodio mediante un balance global de las
-visitas y una penalización relacionada con el uso de la estación de carga."
+visitas y una penalización relacionada con el uso de la estación de carga.
 
 DIAPOSITIVA 9 — Línea 2 (segunda)
 -----------------------------------------------------
-"Aunque este enfoque permitió mejorar ligeramente el comportamiento energético,
-el aprendizaje fue mucho más difícil y siguió existiendo un importante desequilibrio
-entre habitaciones. Esto puso de manifiesto que, para este problema, una recompensa densa
+Aunque este enfoque permitió mejorar ligeramente el comportamiento energético,
+el aprendizaje fue mucho más difícil y siguió existiendo un desequilibrio
+entre habitaciones sin tener la cobertura completa.
+
+Esto puso de manifiesto que, para este problema, una recompensa densa
 proporciona una guía mucho más útil durante el entrenamiento."
 
 
 DIAPOSITIVA 10 — Linea 3  Acción Stop (introducción)
 --------------------------------
 
-"Hasta este momento el robot únicamente podía decidir a qué habitación desplazarse
-o cuándo acudir a la estación de cargaLa tercera línea incorpora una nueva acción 
-denominada Stop.Con ella el robot puede decidir permanecer detenido durante un 
-tiempo antes de realizar la siguiente acción. Esto amplía el espacio de acciones
-y permite al sistema gestionar explícitamente el tiempo dentro del episodio."
+Hasta este momento el robot únicamente podía decidir a qué habitación desplazarse
+o cuándo acudir a la estación de carga.
+
+La tercera línea incorpora una nueva acción denominada Stop. Con ella el robot 
+puede decidir permanecer detenido durante un tiempo antes de realizar la 
+siguiente acción. 
+
+Esto amplía el espacio de acciones a un sistema multidiscreto donde la cuarta accion
+tiene otra accion asociada de seleccion de segundos y permite al sistema
+gestionar explícitamente el tiempo dentro del episodio.
+
+
 
 
 DIAPOSITIVA 10 — Linea 3 Acción Stop (velocidad del robot determinada)
 --------------------------------
 
-"Una vez validada la nueva acción Stop, se estudió cómo afectaba la escala temporal
+Podemos observar unos primeros resultados con cobertura completa 
+pero no muy equilbrados en balance.
+
+Una vez validada funcionalmente la nueva acción Stop, se estudió cómo afectaba la escala temporal
 del entorno al aprendizaje, el siguiente paso fue restaurar la velocidad nominal 
-del robot Pioneer P3DX. El objetivo era analizar cómo influía una escala temporal 
-más realista en el aprendizaje del agente, ya que al aumentar el tiempo necesario 
-para desplazarse, la decisión de detenerse adquiere un coste temporal mucho más 
-significativo dentro del episodio.
+del robot Pioneer P3DX, que había sido aumentada en un principio por tiempo de entrenamiento. 
+
+El objetivo era analizar cómo influía una escala temporal tanto de velocidad como de batería
+más realista en el aprendizaje del agente, ya que al aumentar el tiempo necesario para
+desplazarse, la decisión de detenerse adquiere un coste temporal mucho más significativo
+en las decisiones dentro del episodio.
 
 Durante este experimento se ajustó el modelo de batería para aumentar 
 la presión energética y favorecer que la acción Stop pudiera tener utilidad práctica.
@@ -151,14 +181,13 @@ El resultado más relevante no fue una mejora directa en las métricas finales, 
 un cambio en la dinámica del aprendizaje. La curva de recompensa dejó de permanecer
 estancada y comenzó a crecer de forma sostenida, lo que indica que la velocidad 
 del robot y la dinámica de la batería influyen de manera importante en la 
-convergencia del agente."
-
+convergencia del agente.
 
 
 DIAPOSITIVA 11 — Linea 3 Acción Stop (velocidad)
 -------------------------------------------------
 
-"Una vez validado el comportamiento del entorno con velocidad nominal, se 
+Una vez validado el comportamiento del entorno con velocidad nominal, se 
 desarrolló un mecanismo de aceleración de la simulación mediante un factor 
 de escala de tres.
 
