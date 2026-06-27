@@ -9,8 +9,8 @@ DIAPOSITIVA 1 — PORTADA
 
 "Buenos días. Mi nombre es David Solero Chicano y hoy voy a presentar mi Trabajo de
 Fin de Grado, titulado Aprendizaje por refuerzo para el control de alto nivel de 
-robots móviles, realizado bajo la dirección de Ana María Cruz Martín y Juan Antonio
-Fernández Madrigal."
+robots móviles (ya nombrado), realizado bajo la dirección de Ana María Cruz Martín y 
+Juan Antonio Fernández Madrigal."
 
 
 DIAPOSITIVA 2 — MOTIVACIÓN
@@ -51,7 +51,7 @@ DIAPOSITIVA 4 — TECNOLOGÍAS USADAS
 CoppeliaSim se utilizó como simulador del robot y del entorno. Python implementó toda 
 la lógica del aprendizaje por refuerzo y la comunicación con el simulador mediante ZeroMQ.
 
-El problema se formuló utilizando Gymnasium y el entrenamiento del agente se realizó 
+El problema se formuló utilizando Gymnasium y el entrenamiento del sistema se realizó 
 con Stable-Baselines3 empleando el algoritmo PPO. Además, para el análisis de resultados 
 se utilizaron herramientas como NumPy, Pandas y Matplotlib."**
 
@@ -70,28 +70,39 @@ A la derecha puede verse el escenario utilizado durante todos los experimentos."
 DIAPOSITIVA 5 — DEFINICIÓN DEL PROBLEMA RL
 --------------------------------------
 
-"El problema se formuló como un proceso de decisión de Markov. El estado incluye la 
-posición actual del robot, el nivel de batería y el número de visitas acumuladas a 
-cada habitación. Las acciones consisten en desplazarse hacia una de las tres 
-habitaciones o hacia la estación de carga. Cada episodio finaliza cuando se alcanzan
-50 acciones o cuando la batería se agota. A partir de esta formulación se entrenó un
-agente PPO, siendo el diseño de la recompensa el principal objeto de estudio del trabajo."
+"El problema se formuló como un proceso de decisión de Markov. El estado recoge la
+información que el agente conoce en cada instante incluye la posición actual del 
+robot, el nivel de batería y el número de visitas acumuladas a cada habitación. 
+
+Las acciones consisten en desplazarse hacia una de las tres habitaciones o hacia
+la estación de carga. Cada episodio finaliza cuando se alcanzan50 acciones o 
+cuando la batería se agota.
+
+A partir de esta formulación se entrenó un modelo PPO, siendo el diseño de la 
+recompensa el principal objeto de estudio del trabajo.
+
+Una vez construido el entorno, el resto del trabajo se organizó en cuatro líneas
+de investigación, cada una centrada en estudiar un aspecto diferente del aprendizaje
+del agente"
 
 
 DIAPOSITIVA 6 — Línea 1 (primera diapositiva)
 --------------------------------------------
 
-"La primera línea de investigación utiliza una recompensa densa, es decir, el agente
-recibe una señal en cada paso que realiza.Se recompensa la visita a habitaciones 
-poco exploradas y se penaliza el agotamiento completo de la batería. A partir de esta
-idea se realizaron distintas modificaciones para mejorar el comportamiento aprendido."
+"La primera línea de investigación se centró en el diseño de la función de recompensa,
+es decir, la señal que guía el aprendizaje del robot. En este caso se utilizó una 
+recompensa densa, el modelo recibe una señal en cada paso que realiza.
+
+Se recompensa la visita a habitaciones poco exploradas y se penaliza el agotamiento 
+completo de la batería. A partir de esta idea se realizaron distintas modificaciones
+para mejorar el comportamiento aprendido."
 
 
 DIAPOSITIVA 7 — Línea 1 (segunda diapositiva)
 -----------------------------
 
 "Tras varios experimentos se llegó al experimento 006, que introducía una penalización
-cuando el agente sobrevisitaba una misma habitación. Esta configuración consiguió
+cuando el robot sobrevisitaba una misma habitación. Esta configuración consiguió
 cobertura completa en todos los episodios, ningún agotamiento de batería y el mejor 
 equilibrio entre habitaciones de todo el trabajo. Por ello fue seleccionado como la 
 mejor configuración global."
@@ -100,10 +111,11 @@ mejor configuración global."
 DIAPOSITIVA 8 — Línea 2 (primera)
 ------------------------------------
 
-"La segunda línea sustituye la recompensa densa por una recompensa dispersa. En lugar de
-recibir una señal continuamente, el agente solo es evaluado al final del episodio 
-mediante un balance global de las visitas y una penalización relacionada con el uso 
-de la estación de carga."
+"Una vez obtenidos estos resultados, la siguiente cuestión fue comprobar si el modelo
+podía aprender recibiendo mucha menos información durante el entrenamiento. Para
+ello se sustituyó la recompensa densa, en lugar de recibir una señal continuamente, 
+el agente solo es evaluado al final del episodio mediante un balance global de las
+visitas y una penalización relacionada con el uso de la estación de carga."
 
 DIAPOSITIVA 9 — Línea 2 (segunda)
 -----------------------------------------------------
@@ -116,36 +128,51 @@ proporciona una guía mucho más útil durante el entrenamiento."
 DIAPOSITIVA 10 — Linea 3  Acción Stop (introducción)
 --------------------------------
 
-"La tercera línea incorpora una nueva acción denominada Stop.Con ella el agente puede 
-decidir permanecer detenido durante un tiempo antes de realizar la siguiente acción. 
-Esto amplía el espacio de acciones y permite al agente gestionar explícitamente el 
-tiempo dentro del episodio."
+"Hasta este momento el robot únicamente podía decidir a qué habitación desplazarse
+o cuándo acudir a la estación de cargaLa tercera línea incorpora una nueva acción 
+denominada Stop.Con ella el robot puede decidir permanecer detenido durante un 
+tiempo antes de realizar la siguiente acción. Esto amplía el espacio de acciones
+y permite al sistema gestionar explícitamente el tiempo dentro del episodio."
 
 
-DIAPOSITIVA 10 — Linea 3 Acción Stop (introducción)
+DIAPOSITIVA 10 — Linea 3 Acción Stop (velocidad del robot determinada)
 --------------------------------
 
-Además, durante esta línea se validó una aceleración de la simulación multiplicando
-por tres la velocidad nominal del robot. El objetivo era reducir el tiempo necesario
-para entrenar y evaluar los agentes.
+"Una vez validada la nueva acción Stop, se estudió cómo afectaba la escala temporal
+del entorno al aprendizaje, el siguiente paso fue restaurar la velocidad nominal 
+del robot Pioneer P3DX. El objetivo era analizar cómo influía una escala temporal 
+más realista en el aprendizaje del agente, ya que al aumentar el tiempo necesario 
+para desplazarse, la decisión de detenerse adquiere un coste temporal mucho más 
+significativo dentro del episodio.
 
-Los resultados confirmaron que esta aceleración permitía disminuir significativamente
-dichos tiempos sin alterar el comportamiento aprendido ni las métricas obtenidas, por lo
-que se convirtió en una mejora muy útil desde el punto de vista práctico
+Durante este experimento se ajustó el modelo de batería para aumentar 
+la presión energética y favorecer que la acción Stop pudiera tener utilidad práctica.
+El resultado más relevante no fue una mejora directa en las métricas finales, sino 
+un cambio en la dinámica del aprendizaje. La curva de recompensa dejó de permanecer
+estancada y comenzó a crecer de forma sostenida, lo que indica que la velocidad 
+del robot y la dinámica de la batería influyen de manera importante en la 
+convergencia del agente."
 
 
 
 DIAPOSITIVA 11 — Linea 3 Acción Stop (velocidad)
 -------------------------------------------------
 
-"De forma adicional, también se validó un factor de aceleración de la simulación de ×3.
+"Una vez validado el comportamiento del entorno con velocidad nominal, se 
+desarrolló un mecanismo de aceleración de la simulación mediante un factor 
+de escala de tres.
 
-El objetivo era comprobar que acelerar el tiempo de simulación reducía significativamente 
-el tiempo de entrenamiento y evaluación sin modificar la dinámica del aprendizaje.
+Es importante destacar que esta aceleración no modifica la velocidad física del
+robot ni la dinámica del entorno. Únicamente reduce el tiempo real necesario 
+para ejecutar los entrenamientos, manteniendo exactamente la misma secuencia de
+estados y el mismo comportamiento del modelo de batería.
 
-Los resultados confirmaron que las métricas obtenidas eran equivalentes a las del entorno
-sin aceleración, por lo que esta configuración pasó a utilizarse como estándar en los 
-experimentos posteriores."
+Los resultados mostraron que la curva de aprendizaje y el proceso de convergencia
+eran equivalentes a los obtenidos sin aceleración, mientras que el tiempo 
+de entrenamiento se reducía de forma considerable.
+
+Por ello, esta configuración quedó validada y se utilizó en el resto de los 
+experimentos del trabajo."
 
 
 DIAPOSITIVA 12 — Linea 4 Información temporal (introducción)
